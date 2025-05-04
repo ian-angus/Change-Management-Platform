@@ -1,0 +1,66 @@
+/* Header.css */
+
+.app-header {
+  background-color: var(--brightfold-white);
+  color: var(--brightfold-charcoal);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 150px; /* Increased height for larger logo */
+  position: fixed; /* Make header fixed */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100; /* Ensure header is above sidebar */
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */ /* Removed as requested */
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+  height: 120px; /* Significantly increased logo size */
+  width: auto;
+  margin-right: 15px;
+}
+
+.header-tagline {
+    font-size: 1.1em;
+    color: var(--brightfold-charcoal);
+    font-style: italic;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+}
+
+.welcome-message {
+  margin-right: 20px;
+  font-weight: bold; /* Make welcome message bold */
+  font-size: 1.2em; /* Make welcome message larger */
+}
+
+/* Add styles for user profile dropdown or logout button if needed */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    height: 70px; /* Adjust header height for mobile */
+    padding: 0 10px;
+  }
+  .header-logo {
+    height: 50px; /* Adjust logo size for mobile */
+  }
+  .header-tagline {
+      display: none; /* Hide tagline on smaller screens */
+  }
+  .welcome-message {
+    font-size: 1em;
+    margin-right: 10px;
+  }
+}
+

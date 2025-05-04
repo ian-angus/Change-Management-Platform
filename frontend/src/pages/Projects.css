@@ -1,0 +1,33 @@
+/* Projects.css */
+
+.projects-page {
+  /* Add styles for the projects page container if needed */
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.add-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.error-message {
+  background-color: #f8d7da; /* Light red */
+  color: #721c24; /* Dark red */
+  padding: 10px 15px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Inherit table styles from index.css */
+/* Add specific overrides if needed */
+
+/* Modal styles are in index.css */
+
