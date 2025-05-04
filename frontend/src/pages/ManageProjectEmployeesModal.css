@@ -1,0 +1,165 @@
+/* ManageProjectEmployeesModal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Ensure modal is on top */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 80%;
+  max-width: 700px; /* Max width for the modal */
+  max-height: 80vh; /* Max height */
+  overflow-y: auto; /* Allow scrolling within the modal */
+  position: relative;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  cursor: pointer;
+  color: #aaa;
+  line-height: 1;
+}
+
+.close-modal-btn:hover {
+  color: #333;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-section {
+  margin-bottom: 25px;
+}
+
+.modal-section h4 {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.employee-list {
+  list-style: none;
+  padding: 0;
+  max-height: 150px; /* Limit height and allow scroll */
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.employee-list li {
+  padding: 8px 5px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.employee-list li:last-child {
+  border-bottom: none;
+}
+
+.add-employees-section {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.search-input,
+.role-select {
+  width: calc(100% - 22px); /* Account for padding/border */
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-by-role {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-by-role .role-select {
+  flex-grow: 1;
+  margin-bottom: 0;
+}
+
+.add-btn,
+.add-role-btn {
+  padding: 5px 10px;
+  background-color: #28a745; /* Green */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.add-role-btn {
+    background-color: #007bff; /* Blue */
+}
+
+.add-btn:hover,
+.add-role-btn:hover {
+  opacity: 0.9;
+}
+
+.add-role-btn:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+.error-message {
+  color: #dc3545; /* Red */
+  margin-bottom: 15px;
+}
+
+/* Project List Button Styling (in Projects.css) */
+.project-list {
+    list-style: none;
+    padding: 0;
+}
+.project-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.manage-employees-btn {
+    padding: 5px 10px;
+    background-color: #6c757d; /* Grey */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.manage-employees-btn:hover {
+    background-color: #5a6268;
+}
+

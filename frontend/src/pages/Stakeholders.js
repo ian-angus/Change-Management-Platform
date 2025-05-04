@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-// Import CSS for styling if needed
-// import './Stakeholders.css';
+import CreateStakeholderGroupModal from './CreateStakeholderGroupModal'; // Import the modal
+import './Stakeholders.css'; // Make sure CSS is imported
 
 function Stakeholders({ apiBaseUrl }) {
   const [stakeholderGroups, setStakeholderGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Initially false until project selected
   const [error, setError] = useState(null);
-  const [selectedProjectId, setSelectedProjectId] = useState(null); // Example: Assume filtering by project
-  const [projects, setProjects] = useState([]); // To populate project dropdown
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Fetch projects for the dropdown (similar to Projects.js)
+  // Fetch projects for the dropdown
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -21,31 +22,25 @@ function Stakeholders({ apiBaseUrl }) {
         setProjects(data);
       } catch (err) {
         console.error("Failed to fetch projects for filter:", err);
-        // Handle error fetching projects if necessary
+        setError("Failed to load projects for filtering.");
       }
     };
     fetchProjects();
   }, [apiBaseUrl]);
 
   // Fetch stakeholder groups based on selected project
-  useEffect(() => {
-    if (!selectedProjectId) {
-      setStakeholderGroups([]);
-      setLoading(false);
-      return; // Don't fetch if no project is selected
-    }
-
-    const fetchStakeholderGroups = async () => {
+  const fetchStakeholderGroups = async (projectId) => {
+      if (!projectId) return;
       try {
         setLoading(true);
-        const url = `${apiBaseUrl}/stakeholder_groups?project_id=${selectedProjectId}`;
+        setError(null);
+        const url = `${apiBaseUrl}/stakeholder_groups?project_id=${projectId}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setStakeholderGroups(data);
-        setError(null);
       } catch (err) {
         console.error("Failed to fetch stakeholder groups:", err);
         setError("Failed to load stakeholder groups. Please try again later.");
@@ -55,11 +50,36 @@ function Stakeholders({ apiBaseUrl }) {
       }
     };
 
-    fetchStakeholderGroups();
+  useEffect(() => {
+    if (selectedProjectId) {
+        fetchStakeholderGroups(selectedProjectId);
+    }
   }, [apiBaseUrl, selectedProjectId]);
 
   const handleProjectChange = (event) => {
-    setSelectedProjectId(event.target.value);
+    const newProjectId = event.target.value;
+    setSelectedProjectId(newProjectId);
+    setStakeholderGroups([]); // Clear groups when project changes
+    if (!newProjectId) {
+        setLoading(false); // Stop loading if no project selected
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    if (!selectedProjectId) {
+        setError("Please select a project before adding a group.");
+        return;
+    }
+    setError(null);
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = (groupCreated) => {
+    setShowCreateModal(false);
+    if (groupCreated) {
+        // Refetch groups for the current project
+        fetchStakeholderGroups(selectedProjectId);
+    }
   };
 
   return (
@@ -68,34 +88,49 @@ function Stakeholders({ apiBaseUrl }) {
       <p>Manage stakeholder groups for your projects.</p>
 
       {/* Project Filter Dropdown */}
-      <div>
+      <div className="filter-container">
         <label htmlFor="project-filter">Filter by Project: </label>
         <select id="project-filter" value={selectedProjectId || ''} onChange={handleProjectChange}>
-          <option value="" disabled>Select a project</option>
+          <option value="" disabled={projects.length > 0}>Select a project</option>
+          {projects.length === 0 && <option value="" disabled>Loading projects...</option>}
           {projects.map(project => (
             <option key={project.id} value={project.id}>{project.name}</option>
           ))}
         </select>
+        <button onClick={handleOpenCreateModal} disabled={!selectedProjectId} className="add-group-btn">
+            Add New Group
+        </button>
       </div>
 
+      {error && <p className="error-message">{error}</p>}
       {loading && <p>Loading stakeholder groups...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+
       {!loading && !error && selectedProjectId && (
         <>
           {stakeholderGroups.length > 0 ? (
-            <ul>
+            <ul className="stakeholder-group-list">
               {stakeholderGroups.map(group => (
-                <li key={group.id}>{group.name}</li>
+                <li key={group.id}>
+                    {group.name}
+                    {/* Add Edit/Delete buttons later */}
+                </li>
               ))}
             </ul>
           ) : (
             <p>No stakeholder groups found for this project.</p>
           )}
-          {/* Add Group button/modal placeholder */}
-          {/* <button>Add New Group</button> */}
         </>
       )}
-      {!selectedProjectId && <p>Please select a project to view stakeholder groups.</p>}
+      {!selectedProjectId && !loading && <p>Please select a project to view or add stakeholder groups.</p>}
+
+      {/* Create Group Modal */}
+      {showCreateModal && selectedProjectId && (
+        <CreateStakeholderGroupModal
+            projectId={selectedProjectId}
+            apiBaseUrl={apiBaseUrl}
+            onClose={handleCloseCreateModal}
+        />
+      )}
     </div>
   );
 }

@@ -1,63 +1,87 @@
 import React, { useState, useEffect } from 'react';
-// Import CSS for styling if needed
-// import './Assessments.css';
+import AssessmentTemplateManager from './AssessmentTemplateManager'; // Import the new component
+import './Assessments.css'; // Make sure CSS is imported
 
 function Assessments({ apiBaseUrl }) {
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Add state for project filtering if needed
-  // const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [showTemplateManager, setShowTemplateManager] = useState(false); // State to toggle template manager
 
   useEffect(() => {
+    // Fetch assessments (existing logic)
     const fetchAssessments = async () => {
       try {
         setLoading(true);
-        // Modify URL if filtering by project
-        const url = `${apiBaseUrl}/assessments`; // Add ?project_id=... if needed
+        setError(null);
+        const url = `${apiBaseUrl}/assessments`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setAssessments(data);
-        setError(null);
       } catch (err) {
         console.error("Failed to fetch assessments:", err);
         setError("Failed to load assessments. Please try again later.");
-        setAssessments([]); // Clear assessments on error
+        setAssessments([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAssessments();
-  }, [apiBaseUrl]); // Add selectedProjectId to dependency array if filtering
+    // Only fetch assessments if template manager is not shown
+    if (!showTemplateManager) {
+        fetchAssessments();
+    }
+
+  }, [apiBaseUrl, showTemplateManager]); // Re-run if template manager visibility changes
+
+  const toggleTemplateManager = () => {
+    setShowTemplateManager(!showTemplateManager);
+    // Clear assessment list and errors when switching views
+    if (!showTemplateManager) {
+        setAssessments([]);
+        setError(null);
+        setLoading(false); // Prevent assessment loading indicator when showing templates
+    }
+  };
 
   return (
     <div className="assessments-page">
-      <h2>Assessments</h2>
-      {/* Add project filter dropdown here if needed */}
-      {loading && <p>Loading assessments...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && (
+      <div className="page-header">
+        <h2>{showTemplateManager ? 'Assessment Templates' : 'Assessments'}</h2>
+        <button onClick={toggleTemplateManager} className="toggle-view-btn">
+          {showTemplateManager ? 'View Assessments' : 'Manage Templates'}
+        </button>
+      </div>
+
+      {error && <p className="error-message">{error}</p>}
+
+      {showTemplateManager ? (
+        <AssessmentTemplateManager apiBaseUrl={apiBaseUrl} />
+      ) : (
         <>
-          <p>Manage assessments for your projects.</p>
-          {/* Basic list display - More complex UI (tiles, modals) to be restored later */}
-          {assessments.length > 0 ? (
-            <ul>
-              {assessments.map(assessment => (
-                <li key={assessment.id}>
-                  {assessment.name} (Project: {assessment.project_name || 'N/A'}, Status: {assessment.status})
-                  {/* Add buttons like 'View Results', 'Deploy', 'Edit' later */}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No assessments found.</p>
+          {loading && <p>Loading assessments...</p>}
+          {!loading && !error && (
+            <>
+              <p>Manage assessments deployed for your projects.</p>
+              {assessments.length > 0 ? (
+                <ul className="assessment-list">
+                  {assessments.map(assessment => (
+                    <li key={assessment.id}>
+                      {assessment.name} (Project: {assessment.project_name || 'N/A'}, Status: {assessment.status})
+                      {/* Add buttons like 'View Results', 'Deploy', 'Edit' later */}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No assessments found.</p>
+              )}
+              {/* Add Assessment button/modal placeholder */}
+              {/* <button>Add New Assessment</button> */}
+            </>
           )}
-          {/* Add Assessment button/modal placeholder */}
-          {/* <button>Add New Assessment</button> */}
         </>
       )}
     </div>
