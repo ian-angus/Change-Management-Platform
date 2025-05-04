@@ -30,8 +30,10 @@ function Sidebar() {
             </button>
             {settingsOpen && (
               <ul className="submenu">
+                {/* Add actual settings routes when pages are created */}
                 <li><NavLink to="/settings/general" className={({ isActive }) => isActive ? "active-link" : ""}>General</NavLink></li>
                 <li><NavLink to="/settings/users" className={({ isActive }) => isActive ? "active-link" : ""}>Users</NavLink></li>
+                <li><NavLink to="/settings/billing" className={({ isActive }) => isActive ? "active-link" : ""}>Billing</NavLink></li>
                 {/* Add other settings sub-items here */}
               </ul>
             )}

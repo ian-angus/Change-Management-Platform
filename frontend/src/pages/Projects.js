@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Import CSS for styling if needed
-// import './Projects.css';
+import './Projects.css'; // Make sure CSS is imported
 
 function Projects({ apiBaseUrl }) {
   const [projects, setProjects] = useState([]);
@@ -11,16 +11,16 @@ function Projects({ apiBaseUrl }) {
     const fetchProjects = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error state on new fetch
         const response = await fetch(`${apiBaseUrl}/projects`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setProjects(data);
-        setError(null);
       } catch (err) {
         console.error("Failed to fetch projects:", err);
-        setError("Failed to load projects. Please try again later.");
+        setError("Failed to load projects. Please check the connection or try again later.");
         setProjects([]); // Clear projects on error
       } finally {
         setLoading(false);
@@ -37,19 +37,21 @@ function Projects({ apiBaseUrl }) {
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
         <>
-          <p>Manage your change management projects here.</p>
-          {/* Basic list display - More complex UI to be restored later */}
-          {projects.length > 0 ? (
-            <ul>
-              {projects.map(project => (
-                <li key={project.id}>{project.name}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>No projects found.</p>
-          )}
-          {/* Add Project button/modal placeholder */}
+          {/* Add Project button/modal placeholder - To be implemented later */}
           {/* <button>Add New Project</button> */}
+
+          {projects.length > 0 ? (
+            <> 
+              <p>Manage your change management projects here.</p>
+              <ul>
+                {projects.map(project => (
+                  <li key={project.id}>{project.name}</li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>No projects found. You can add a new project to get started.</p> // Display message when no projects exist
+          )}
         </>
       )}
     </div>

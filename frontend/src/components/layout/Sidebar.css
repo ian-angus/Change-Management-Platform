@@ -5,9 +5,9 @@
   color: #e1e8f0; /* Lighter text color */
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px); /* Full height minus header */
+  height: calc(100vh - 80px); /* Full height minus UPDATED header height */
   position: fixed; /* Fixed position */
-  top: 60px; /* Below header */
+  top: 80px; /* Below UPDATED header */
   left: 0;
   padding-top: 20px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -50,7 +50,7 @@
 }
 
 .app-sidebar .active-link {
-  background-color: #007bff; /* Bright Blue for active link (adjust to BrightFold brand) */
+  background-color: #007bff; /* Bright Blue for active link (as requested) */
   color: #ffffff;
   font-weight: bold;
 }
@@ -82,6 +82,6 @@
 }
 
 .settings-menu .submenu .active-link {
-  background-color: #0056b3; /* Slightly darker active color for submenu (adjust) */
+  background-color: #0056b3; /* Slightly darker blue active color for submenu */
 }
 

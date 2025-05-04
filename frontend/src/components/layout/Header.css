@@ -6,7 +6,7 @@
   padding: 0 20px; /* Adjusted padding */
   background-color: #ffffff; /* White background */
   border-bottom: 1px solid #e0e0e0; /* Light border */
-  height: 60px; /* Fixed height */
+  height: 80px; /* Increased height for larger logo */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: sticky; /* Make header sticky */
   top: 0;
@@ -16,11 +16,13 @@
 .logo-container {
   display: flex;
   align-items: center;
+  height: 100%; /* Ensure container takes full header height */
 }
 
 .logo-image {
-  height: 45px; /* Slightly larger logo */
-  /* margin-right: 10px; /* Removed margin if logo includes spacing */
+  height: 70px; /* Significantly larger logo, adjust as needed based on aspect ratio */
+  /* Adjust width automatically or set explicitly if needed */
+  /* width: auto; */
 }
 
 /* Removed logo-text styles */
