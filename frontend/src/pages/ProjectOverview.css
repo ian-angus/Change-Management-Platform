@@ -1,0 +1,57 @@
+.project-overview-page {
+  padding: 2rem;
+}
+
+.project-overview-page h2 {
+  margin-bottom: 1.5rem;
+  color: #333; /* Adjust color based on theme */
+}
+
+/* Add more specific styles for summary panel, stakeholder list, assessment section etc. */
+.summary-panel {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.summary-panel h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.summary-details p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.summary-details strong {
+    display: inline-block;
+    min-width: 120px; /* Adjust as needed */
+    color: #555;
+}
+
+.section {
+    margin-bottom: 2rem;
+}
+
+.section h3 {
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+/* Placeholder styles for stakeholder and assessment lists */
+.stakeholder-list, .assessment-list {
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.quick-actions button {
+    margin-right: 0.5rem;
+}
+
