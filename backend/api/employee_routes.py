@@ -34,7 +34,9 @@ def create_employee():
     required_fields = ["name", "email"]
     if not data or not all(field in data for field in required_fields):
         missing = [field for field in required_fields if field not in data]
-        return jsonify({"error": f"Missing required fields: {", ".join(missing)}"}), 400
+        # Fix: Evaluate join outside f-string
+        missing_fields_str = ", ".join(missing)
+        return jsonify({"error": f"Missing required fields: {missing_fields_str}"}), 400
 
     if Employee.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "Email address already exists."}), 409
@@ -111,7 +113,6 @@ def upload_employees():
 
     if file:
         try:
-            # Read file into pandas DataFrame
             if file.filename.endswith(".csv"):
                 df = pd.read_csv(io.StringIO(file.stream.read().decode("UTF8")))
             elif file.filename.endswith( (".xls", ".xlsx") ):
@@ -119,7 +120,6 @@ def upload_employees():
             else:
                 return jsonify({"error": "Unsupported file type. Please upload CSV or Excel."}), 400
 
-            # Normalize column names (lowercase, replace spaces with underscores)
             df.columns = df.columns.str.lower().str.replace(" ", "_")
 
             required_columns = {"name", "email"}
@@ -128,13 +128,13 @@ def upload_employees():
 
             if not required_columns.issubset(actual_columns):
                 missing = required_columns - actual_columns
-                return jsonify({"error": f"Missing required columns in file: {', '.join(missing)}"}), 400
+                missing_fields_str = ", ".join(missing) # Fix: Evaluate join outside f-string
+                return jsonify({"error": f"Missing required columns in file: {missing_fields_str}"}), 400
 
             processed_count = 0
             skipped_count = 0
             error_list = []
 
-            # Fetch existing emails for faster lookup
             existing_emails = {emp.email for emp in Employee.query.with_entities(Employee.email).all()}
 
             for index, row in df.iterrows():
@@ -143,27 +143,23 @@ def upload_employees():
                 department = row.get("department")
                 job_position = row.get("job_position")
 
-                # Basic validation
                 if not name or not email:
                     error_list.append(f"Row {index + 2}: Missing name or email.")
                     skipped_count += 1
                     continue
                 
-                # Convert potential non-string values to string or None
                 department = str(department) if pd.notna(department) else None
                 job_position = str(job_position) if pd.notna(job_position) else None
                 name = str(name) if pd.notna(name) else None
                 email = str(email) if pd.notna(email) else None
 
-                if not name or not email: # Re-check after potential conversion
+                if not name or not email:
                     error_list.append(f"Row {index + 2}: Invalid name or email after conversion.")
                     skipped_count += 1
                     continue
 
-                # Check for duplicates within the file and database
                 if email in existing_emails:
-                    # Optionally update existing employee? For now, skip.
-                    error_list.append(f"Row {index + 2}: Email 	{email}	 already exists. Skipping.")
+                    error_list.append(f"Row {index + 2}: Email \t{email}\t already exists. Skipping.")
                     skipped_count += 1
                     continue
                 
@@ -175,15 +171,14 @@ def upload_employees():
                         job_position=job_position
                     )
                     db.session.add(new_employee)
-                    existing_emails.add(email) # Add to set to catch duplicates within the file
+                    existing_emails.add(email)
                     processed_count += 1
                 except Exception as e:
-                    db.session.rollback() # Rollback this specific add
+                    db.session.rollback()
                     error_list.append(f"Row {index + 2}: Error adding employee {email} - {e}")
                     skipped_count += 1
-                    continue # Skip to next row
+                    continue
             
-            # Commit all successfully added employees at the end
             db.session.commit()
 
             return jsonify({
@@ -194,7 +189,7 @@ def upload_employees():
             }), 200
 
         except Exception as e:
-            db.session.rollback() # Rollback any potential partial commits
+            db.session.rollback()
             print(f"Error processing bulk upload: {e}")
             return jsonify({"error": f"An error occurred during file processing: {e}"}), 500
 
