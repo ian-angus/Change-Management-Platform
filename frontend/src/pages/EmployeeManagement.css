@@ -1,40 +1,57 @@
 .employee-management-page {
   padding: 20px;
+  /* Allow page to take full height for table scrolling */
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 150px - 40px); /* Adjust based on header/footer/padding */
 }
 
 .employee-management-page h2 {
   margin-bottom: 20px;
   color: #333;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .page-actions {
   margin-bottom: 20px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Container for the scrollable table body */
+.table-container {
+  flex-grow: 1; /* Allow container to fill remaining space */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border: 1px solid #ddd; /* Optional: add border around scroll area */
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  /* Remove margin-top as spacing is handled by container */
 }
 
 .data-table th,
 .data-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px 12px; /* Slightly increase padding */
   text-align: left;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
-.data-table th {
+.data-table thead th {
   background-color: #f2f2f2;
   font-weight: bold;
-  color: #333; /* Added dark color for header text */
+  color: #333;
+  position: sticky; /* Make header sticky */
+  top: 0; /* Stick to the top of the scroll container */
+  z-index: 1; /* Ensure header stays above scrolling content */
 }
 
-.data-table tr:nth-child(even) {
+.data-table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.data-table tr:hover {
+.data-table tbody tr:hover {
   background-color: #f1f1f1;
 }
 
