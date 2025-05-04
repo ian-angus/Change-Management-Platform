@@ -15,7 +15,7 @@ def parse_date(date_string):
     except ValueError:
         try:
             # Fallback for YYYY-MM-DD format
-            return datetime.strptime(date_string, ","%Y-%m-%d")
+            return datetime.strptime(date_string, "%Y-%m-%d")
         except ValueError:
             return None # Indicate parsing failure
 
@@ -47,13 +47,13 @@ def get_project_details(project_id):
 
 @project_bp.route("/", methods=["POST"])
 def create_project():
-    """Create a new project based on detailed requirements."""
+    """Create a new project based on detailed requirements (owner removed)."""
     data = request.get_json()
     if not data or not data.get("name"):
         return jsonify({"error": "Project name is required"}), 400
 
-    # Validate required fields from the new form
-    required_fields = ["name", "project_owner_id", "status"]
+    # Validate required fields (owner removed)
+    required_fields = ["name", "status"]
     if not all(field in data for field in required_fields):
         return jsonify({"error": f"Missing required fields: {', '.join(required_fields)}"}), 400
 
@@ -61,10 +61,7 @@ def create_project():
     if data["status"] not in ["Draft", "Active", "Completed"]:
         return jsonify({"error": "Invalid status value."}) , 400
 
-    # Validate owner exists
-    owner = Employee.query.get(data["project_owner_id"])
-    if not owner:
-        return jsonify({"error": "Invalid project owner ID."}), 400
+    # Removed owner validation
 
     start_date = parse_date(data.get("start_date"))
     end_date = parse_date(data.get("end_date"))
@@ -75,7 +72,7 @@ def create_project():
         new_project = Project(
             name=data["name"],
             description=data.get("description"),
-            project_owner_id=data["project_owner_id"],
+            # project_owner_id removed
             start_date=start_date,
             end_date=end_date,
             status=data["status"]
@@ -93,7 +90,7 @@ def create_project():
 
 @project_bp.route("/<int:project_id>", methods=["PUT"])
 def update_project(project_id):
-    """Update an existing project."""
+    """Update an existing project (owner removed)."""
     project = Project.query.get_or_404(project_id)
     data = request.get_json()
     if not data:
@@ -103,10 +100,7 @@ def update_project(project_id):
         # Update fields if they exist in the request data
         if "name" in data: project.name = data["name"]
         if "description" in data: project.description = data["description"]
-        if "project_owner_id" in data:
-            owner = Employee.query.get(data["project_owner_id"])
-            if not owner: return jsonify({"error": "Invalid project owner ID."}), 400
-            project.project_owner_id = data["project_owner_id"]
+        # Removed owner update logic
         if "start_date" in data:
              parsed_start = parse_date(data["start_date"])
              if data["start_date"] is not None and parsed_start is None:
@@ -204,7 +198,7 @@ def remove_stakeholder_from_project(project_id, employee_id):
         print(f"Error removing stakeholder from project {project_id}: {e}")
         return jsonify({"error": "An error occurred while removing stakeholder."}), 500
 
-# --- Employee Route (for dropdowns) ---
+# --- Employee Route (for dropdowns, still needed for stakeholders) ---
 
 @project_bp.route("/../employees", methods=["GET"])
 # Using .. to navigate out of /api/projects, might need a dedicated employee blueprint later
