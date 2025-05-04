@@ -38,7 +38,8 @@ function EmployeeManagement() {
   const [uploadStatus, setUploadStatus] = useState(''); // For bulk upload feedback
   const fileInputRef = useRef(null); // Ref for file input
 
-  const apiBaseUrl = 'http://localhost:5001/api/employees';
+  // Use relative path for API calls - relies on proxy setting in package.json
+  const apiBaseUrl = '/api/employees';
 
   // Fetch Employees Function
   const fetchEmployees = useCallback(async () => {
@@ -47,7 +48,15 @@ function EmployeeManagement() {
     try {
       const response = await fetch(apiBaseUrl);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status} fetching employees`);
+        // Try to get more specific error from backend if possible
+        let errorMsg = `HTTP error! status: ${response.status} fetching employees`;
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+        } catch (jsonError) {
+            // Ignore if response is not JSON
+        }
+        throw new Error(errorMsg);
       }
       const data = await response.json();
       setEmployees(data);
@@ -128,7 +137,8 @@ function EmployeeManagement() {
     if (!window.confirm("Are you sure you want to delete this employee?")) {
       return;
     }
-    setApiError(null);
+    // Clear main error before attempting delete
+    setError(null);
     try {
       const response = await fetch(`${apiBaseUrl}/${employeeId}`, {
         method: 'DELETE',
@@ -140,7 +150,7 @@ function EmployeeManagement() {
       fetchEmployees();
     } catch (e) {
       console.error(`Failed to delete employee ${employeeId}:`, e);
-      setError(`Failed to delete employee: ${e.message}`);
+      setError(`Failed to delete employee: ${e.message}`); // Show error above table
     }
   };
 
@@ -164,7 +174,6 @@ function EmployeeManagement() {
       const response = await fetch(`${apiBaseUrl}/upload`, {
         method: 'POST',
         body: uploadFormData,
-        // No 'Content-Type' header for FormData, browser sets it with boundary
       });
 
       const result = await response.json();
@@ -176,7 +185,6 @@ function EmployeeManagement() {
       setUploadStatus(`Upload successful! Added: ${result.processed_count}, Skipped/Errors: ${result.skipped_count}. Check console for details.`);
       if (result.errors && result.errors.length > 0) {
         console.warn("Bulk Upload Errors:", result.errors);
-        // Optionally display errors more prominently
       }
       fetchEmployees(); // Refresh list
 
@@ -184,7 +192,6 @@ function EmployeeManagement() {
       console.error("Bulk upload failed:", e);
       setUploadStatus(`Upload failed: ${e.message}`);
     } finally {
-      // Reset file input value so the same file can be selected again
       event.target.value = null;
     }
   };
@@ -199,19 +206,18 @@ function EmployeeManagement() {
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          style={{ display: 'none' }} // Hide the actual input
-          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" // Accept CSV and Excel
+          style={{ display: 'none' }}
+          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
         />
         <button className="btn btn-secondary" style={{ marginLeft: '10px' }} onClick={handleUploadClick}>Upload List</button>
       </div>
 
-      {/* Display Upload Status */}
       {uploadStatus && <p style={{ color: uploadStatus.startsWith('Upload failed') ? 'red' : 'green', margin: '10px 0' }}>{uploadStatus}</p>}
-
       {loading && <p>Loading employees...</p>}
-      {error && <p className="error-message">Error: {error}</p>}
+      {/* Display fetch error prominently */}
+      {error && !loading && <p className="error-message" style={{ border: '1px solid red', padding: '10px', backgroundColor: '#ffecec' }}>Error loading employee data: {error}</p>}
 
-      {!loading && !error && (
+      {!loading && (
         <table className="data-table">
           <thead>
             <tr>
@@ -238,7 +244,8 @@ function EmployeeManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="5">No employees found. Use '+ Add Employee' or 'Upload List' to start.</td>
+                {/* Show different message if there was an error vs. genuinely no employees */}
+                <td colSpan="5">{error ? 'Could not load data.' : 'No employees found. Use \'+ Add Employee\' or \'Upload List\' to start.'}</td>
               </tr>
             )}
           </tbody>

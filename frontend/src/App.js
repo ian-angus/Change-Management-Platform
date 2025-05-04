@@ -5,10 +5,11 @@ import Sidebar from './components/layout/Sidebar';
 import Footer from './components/layout/Footer';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
-import ProjectOverview from './pages/ProjectOverview'; // Import ProjectOverview
+import ProjectOverview from './pages/ProjectOverview';
 import Assessments from './pages/Assessments';
 import Plans from './pages/Plans';
 import Stakeholders from './pages/Stakeholders';
+import EmployeeManagement from './pages/EmployeeManagement'; // Import EmployeeManagement
 // Import Reports page if it exists
 // import Reports from './pages/Reports';
 import './App.css';
@@ -25,13 +26,16 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
-              {/* Add route for individual project overview */}
               <Route path="/projects/:projectId" element={<ProjectOverview />} />
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/stakeholders" element={<Stakeholders />} />
+              {/* Add route for Employee Management under Settings */}
+              <Route path="/settings/employees" element={<EmployeeManagement />} />
               {/* Add route for Reports if implemented */}
               {/* <Route path="/reports" element={<Reports />} /> */}
+              {/* Optional: Add a catch-all or redirect for /settings if needed */}
+              {/* <Route path="/settings" element={<Navigate to="/settings/employees" replace />} /> */}
             </Routes>
           </main>
         </div>
