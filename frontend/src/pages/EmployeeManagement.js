@@ -46,7 +46,6 @@ function EmployeeManagement() {
     setLoading(true);
     setError(null);
     try {
-      // Use apiBaseUrl which includes the trailing slash
       const response = await fetch(apiBaseUrl);
       if (!response.ok) {
         let errorMsg = `HTTP error! status: ${response.status} fetching employees`;
@@ -66,7 +65,7 @@ function EmployeeManagement() {
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl]); // Dependency array includes apiBaseUrl
+  }, [apiBaseUrl]);
 
   useEffect(() => {
     fetchEmployees();
@@ -108,7 +107,6 @@ function EmployeeManagement() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
-    // Construct URL with trailing slash for POST, or include ID for PUT
     const url = currentEmployee ? `${apiBaseUrl}${currentEmployee.id}` : apiBaseUrl;
     const method = currentEmployee ? 'PUT' : 'POST';
 
@@ -122,18 +120,15 @@ function EmployeeManagement() {
       });
 
       if (!response.ok) {
-        // Attempt to parse error message from backend
         let errorMsg = `HTTP error! status: ${response.status}`;
         try {
             const errorData = await response.json();
             errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) {
-            // Ignore if response is not JSON
-        }
+        } catch (jsonError) { /* Ignore */ }
         throw new Error(errorMsg);
       }
       closeModal();
-      fetchEmployees(); // Refresh list after successful operation
+      fetchEmployees();
     } catch (e) {
       console.error(`Failed to ${currentEmployee ? 'update' : 'create'} employee:`, e);
       setApiError(e.message);
@@ -147,7 +142,6 @@ function EmployeeManagement() {
     }
     setError(null);
     try {
-      // Construct URL with employee ID (trailing slash might not be needed here depending on route definition, but added for consistency)
       const response = await fetch(`${apiBaseUrl}${employeeId}`, {
         method: 'DELETE',
       });
@@ -156,12 +150,10 @@ function EmployeeManagement() {
         try {
             const errorData = await response.json();
             errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) {
-            // Ignore if response is not JSON
-        }
+        } catch (jsonError) { /* Ignore */ }
         throw new Error(errorMsg);
       }
-      fetchEmployees(); // Refresh list after successful deletion
+      fetchEmployees();
     } catch (e) {
       console.error(`Failed to delete employee ${employeeId}:`, e);
       setError(`Failed to delete employee: ${e.message}`);
@@ -175,9 +167,7 @@ function EmployeeManagement() {
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
     setUploadStatus('Uploading...');
     setError(null);
 
@@ -185,24 +175,19 @@ function EmployeeManagement() {
     uploadFormData.append('file', file);
 
     try {
-      // Construct URL for upload endpoint (ensure consistency with backend route)
       const response = await fetch(`${apiBaseUrl}upload`, {
         method: 'POST',
         body: uploadFormData,
       });
-
       const result = await response.json();
-
       if (!response.ok) {
         throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
-
       setUploadStatus(`Upload successful! Added: ${result.processed_count}, Skipped/Errors: ${result.skipped_count}. Check console for details.`);
       if (result.errors && result.errors.length > 0) {
         console.warn("Bulk Upload Errors:", result.errors);
       }
       fetchEmployees();
-
     } catch (e) {
       console.error("Bulk upload failed:", e);
       setUploadStatus(`Upload failed: ${e.message}`);
@@ -231,40 +216,53 @@ function EmployeeManagement() {
       {loading && <p>Loading employees...</p>}
       {error && !loading && <p className="error-message" style={{ border: '1px solid red', padding: '10px', backgroundColor: '#ffecec' }}>Error loading employee data: {error}</p>}
 
+      {/* Table structure for fixed header */}
       {!loading && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Department</th>
-              <th>Job Position</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length > 0 ? (
-              employees.map((employee) => (
-                <tr key={employee.id}>
-                  <td>{employee.name}</td>
-                  <td>{employee.email}</td>
-                  <td>{employee.department || 'N/A'}</td>
-                  <td>{employee.job_position || 'N/A'}</td>
-                  <td>
-                    <button className="btn-icon" title="Edit Employee" onClick={() => openEditModal(employee)}>✏️</button>
-                    <button className="btn-icon" title="Delete Employee" onClick={() => handleDeleteEmployee(employee.id)}>🗑️</button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+        <div className="table-wrapper">
+          {/* Header Table */}
+          <table className="table-header">
+            <thead>
               <tr>
-                <td colSpan="5">{error ? 'Could not load data.' : 'No employees found. Use \'+ Add Employee\' or \'Upload List\' to start.'}</td>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Job Position</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+          </table>
+          {/* Scrollable Body Table */}
+          <div className="table-body-scroll">
+            <table className="table-body">
+              <tbody>
+                {employees.length > 0 ? (
+                  employees.map((employee) => (
+                    <tr key={employee.id}>
+                      <td>{employee.name}</td>
+                      <td>{employee.email}</td>
+                      <td>{employee.department || 'N/A'}</td>
+                      <td>{employee.job_position || 'N/A'}</td>
+                      <td>
+                        <button className="btn-icon" title="Edit Employee" onClick={() => openEditModal(employee)}>✏️</button>
+                        <button className="btn-icon" title="Delete Employee" onClick={() => handleDeleteEmployee(employee.id)}>🗑️</button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    {/* Use a single cell spanning all columns for the message */}
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                      {error ? 'Could not load data.' : 'No employees found. Use \'+ Add Employee\' or \'Upload List\' to start.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
+      {/* Modal remains the same */}
       <Modal show={isModalOpen} onClose={closeModal} title={currentEmployee ? 'Edit Employee' : 'Add New Employee'}>
         <form onSubmit={handleFormSubmit}>
           {apiError && <p className="error-message" style={{ marginBottom: '15px' }}>Error: {apiError}</p>}

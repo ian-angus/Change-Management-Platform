@@ -1,59 +1,103 @@
 .employee-management-page {
   padding: 20px;
-  /* Allow page to take full height for table scrolling */
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 150px - 40px); /* Adjust based on header/footer/padding */
+  /* Adjust height calculation based on actual header/footer/padding */
+  height: calc(100vh - 150px - 40px); 
 }
 
 .employee-management-page h2 {
   margin-bottom: 20px;
   color: #333;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
 }
 
 .page-actions {
   margin-bottom: 20px;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
 }
 
-/* Container for the scrollable table body */
-.table-container {
-  flex-grow: 1; /* Allow container to fill remaining space */
-  overflow-y: auto; /* Enable vertical scrolling */
-  border: 1px solid #ddd; /* Optional: add border around scroll area */
+/* New container for the entire table structure */
+.table-wrapper {
+  flex-grow: 1; /* Allow wrapper to fill space */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide overflow from wrapper */
 }
 
-.data-table {
+/* Header Table - Only contains the thead */
+.table-header {
   width: 100%;
   border-collapse: collapse;
-  /* Remove margin-top as spacing is handled by container */
+  table-layout: fixed; /* Important for aligning columns */
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
-.data-table th,
-.data-table td {
-  border: 1px solid #ddd;
-  padding: 10px 12px; /* Slightly increase padding */
+/* Scrollable Body Container */
+.table-body-scroll {
+  flex-grow: 1; /* Allow body to fill remaining space */
+  overflow-y: auto; /* Enable vertical scrolling ONLY for the body */
+  border-left: 1px solid #ddd; /* Match table borders */
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Body Table - Only contains the tbody */
+.table-body {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Important for aligning columns */
+}
+
+/* Common styles for th and td */
+.table-header th,
+.table-body td {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 12px;
   text-align: left;
-  white-space: nowrap; /* Prevent text wrapping */
+  white-space: nowrap;
+  overflow: hidden; /* Prevent content overflow */
+  text-overflow: ellipsis; /* Add ellipsis for overflow */
 }
 
-.data-table thead th {
+/* Specific styles for header */
+.table-header th {
   background-color: #f2f2f2;
   font-weight: bold;
   color: #333;
-  position: sticky; /* Make header sticky */
-  top: 0; /* Stick to the top of the scroll container */
-  z-index: 1; /* Ensure header stays above scrolling content */
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+}
+.table-header th:first-child {
+    border-left: none;
+}
+.table-header th:last-child {
+    border-right: none;
 }
 
-.data-table tbody tr:nth-child(even) {
+/* Specific styles for body cells */
+.table-body td {
+  border-left: none; /* Remove left/right borders from cells */
+  border-right: none;
+}
+
+.table-body tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.data-table tbody tr:hover {
+.table-body tr:hover {
   background-color: #f1f1f1;
 }
+
+/* Ensure consistent column widths (Example - adjust as needed) */
+/* You might need to adjust these based on content */
+.table-header th:nth-child(1), .table-body td:nth-child(1) { width: 20%; } /* Name */
+.table-header th:nth-child(2), .table-body td:nth-child(2) { width: 25%; } /* Email */
+.table-header th:nth-child(3), .table-body td:nth-child(3) { width: 20%; } /* Department */
+.table-header th:nth-child(4), .table-body td:nth-child(4) { width: 20%; } /* Job Position */
+.table-header th:nth-child(5), .table-body td:nth-child(5) { width: 15%; } /* Actions */
+
 
 .btn-icon {
   background: none;
@@ -68,7 +112,7 @@
   font-weight: bold;
 }
 
-/* Basic Modal Styles (Refine as needed) */
+/* --- Modal Styles (unchanged) --- */
 .modal-backdrop {
   position: fixed;
   top: 0;
