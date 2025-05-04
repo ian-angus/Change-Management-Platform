@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEdit, FaEye } from 'react-icons/fa'; // Added FaEdit, FaEye
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa'; // Removed FaEye for now
+// import { Link } from 'react-router-dom'; // Removed Link for now
 import './Projects.css';
 
 function Projects() {
   const [projects, setProjects] = useState([]);
-  const [employees, setEmployees] = useState([]); // State for employees list
+  // Removed employees state as owner dropdown is removed
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(null); // State for project being edited
+  const [editingProject, setEditingProject] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    project_owner_id: '', // Changed from owner
+    // project_owner_id removed
     start_date: '',
     end_date: '',
-    status: 'Draft', // Default to Draft as per requirements
-    stakeholder_ids: [] // For editing stakeholders later
+    status: 'Draft',
+    // stakeholder_ids removed for now, handle on overview page
   });
 
-  // Fetch projects and employees
-  const fetchData = async () => {
+  // Fetch projects
+  const fetchProjects = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch projects
       const projectsResponse = await fetch('/api/projects/');
       if (!projectsResponse.ok) {
         throw new Error(`HTTP error! status: ${projectsResponse.status} fetching projects`);
@@ -33,24 +32,18 @@ function Projects() {
       const projectsData = await projectsResponse.json();
       setProjects(projectsData);
 
-      // Fetch employees for dropdown
-      const employeesResponse = await fetch('/api/employees'); // Fetch employees
-      if (!employeesResponse.ok) {
-        throw new Error(`HTTP error! status: ${employeesResponse.status} fetching employees`);
-      }
-      const employeesData = await employeesResponse.json();
-      setEmployees(employeesData);
+      // Removed employee fetch as owner dropdown is removed
 
     } catch (e) {
-      console.error("Failed to load data:", e);
-      setError('Failed to load projects or employees. Is the backend running and seeded?');
+      console.error("Failed to load projects:", e);
+      setError('Failed to load projects. Is the backend running and seeded?');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchProjects();
   }, []);
 
   // Handle input changes in the form
@@ -66,11 +59,9 @@ function Projects() {
     setFormData({
       name: '',
       description: '',
-      project_owner_id: '',
       start_date: '',
       end_date: '',
       status: 'Draft',
-      stakeholder_ids: []
     });
   };
 
@@ -80,11 +71,9 @@ function Projects() {
     setFormData({
       name: '',
       description: '',
-      project_owner_id: '',
       start_date: '',
       end_date: '',
       status: 'Draft',
-      stakeholder_ids: []
     });
     setIsModalOpen(true);
   };
@@ -95,12 +84,10 @@ function Projects() {
     setFormData({
       name: project.name || '',
       description: project.description || '',
-      project_owner_id: project.project_owner_id || '',
       // Format dates for input type='date'
       start_date: project.start_date ? project.start_date.split('T')[0] : '',
       end_date: project.end_date ? project.end_date.split('T')[0] : '',
       status: project.status || 'Draft',
-      stakeholder_ids: project.stakeholders ? project.stakeholders.map(s => s.id) : [] // Store stakeholder IDs
     });
     setIsModalOpen(true);
   };
@@ -111,20 +98,16 @@ function Projects() {
     const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects/';
     const method = editingProject ? 'PUT' : 'POST';
 
-    // Ensure owner ID is an integer or null
     const payload = {
         ...formData,
-        project_owner_id: formData.project_owner_id ? parseInt(formData.project_owner_id, 10) : null,
         // Convert empty date strings to null for backend
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
     };
-    // Remove stakeholder_ids for create/update via main form, handle separately
-    delete payload.stakeholder_ids;
 
-    // Basic validation
-    if (!payload.name || !payload.project_owner_id || !payload.status) {
-        setError('Project Name, Owner, and Status are required.');
+    // Basic validation (owner removed)
+    if (!payload.name || !payload.status) {
+        setError('Project Name and Status are required.');
         return;
     }
 
@@ -141,7 +124,7 @@ function Projects() {
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       closeModal();
-      fetchData(); // Refresh data
+      fetchProjects(); // Refresh data
     } catch (e) {
       console.error(`Failed to ${editingProject ? 'update' : 'create'} project:`, e);
       setError(`Failed to ${editingProject ? 'update' : 'create'} project: ${e.message}`);
@@ -159,7 +142,7 @@ function Projects() {
            const errorData = await response.json();
            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
-        fetchData(); // Refresh the project list
+        fetchProjects(); // Refresh the project list
       } catch (e) {
         console.error("Failed to delete project:", e);
         setError(`Failed to delete project: ${e.message}`);
@@ -171,7 +154,6 @@ function Projects() {
     <div className="projects-page">
       <div className="page-header">
         <h2>Projects Overview</h2>
-        {/* Use specific function for create modal */}
         <button className="btn-primary add-project-btn" onClick={openCreateModal}>
           <FaPlus /> New Project
         </button>
@@ -186,9 +168,8 @@ function Projects() {
           <table>
             <thead>
               <tr>
-                {/*<th>ID</th> Removed ID for cleaner look */}
                 <th>Name</th>
-                <th>Owner</th>
+                {/*<th>Owner</th> Removed Owner column */}
                 <th>Status</th>
                 <th>Start Date</th>
                 <th>End Date</th>
@@ -201,9 +182,8 @@ function Projects() {
               {projects.length > 0 ? (
                 projects.map((project) => (
                   <tr key={project.id}>
-                    {/*<td>{project.id}</td>*/}
                     <td>{project.name}</td>
-                    <td>{project.owner_name || 'N/A'}</td> {/* Display owner name */}
+                    {/*<td>{project.owner_name || 'N/A'}</td> Removed Owner display */}
                     <td><span className={`status-badge status-${project.status?.toLowerCase()}`}>{project.status}</span></td>
                     <td>{project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{project.end_date ? new Date(project.end_date).toLocaleDateString() : 'N/A'}</td>
@@ -218,13 +198,13 @@ function Projects() {
                       <button onClick={() => handleDeleteProject(project.id)} className="action-btn delete-btn" title="Delete Project">
                         <FaTrash />
                       </button>
-                      {/* Add Duplicate/Archive later if needed */}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8">No projects found. Use the '+ New Project' button to create one.</td>
+                  {/* Adjusted colspan */}
+                  <td colSpan="7">No projects found. Use the '+ New Project' button to create one.</td>
                 </tr>
               )}
             </tbody>
@@ -247,15 +227,7 @@ function Projects() {
                 <label htmlFor="description">Description</label>
                 <textarea id="description" name="description" value={formData.description} onChange={handleInputChange}></textarea>
               </div>
-              <div className="form-group">
-                <label htmlFor="project_owner_id">Project Owner *</label>
-                <select id="project_owner_id" name="project_owner_id" value={formData.project_owner_id} onChange={handleInputChange} required>
-                  <option value="">-- Select Owner --</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.email})</option>
-                  ))}
-                </select>
-              </div>
+              {/* Removed Project Owner dropdown */}
               <div className="form-group">
                 <label htmlFor="start_date">Start Date</label>
                 <input type="date" id="start_date" name="start_date" value={formData.start_date} onChange={handleInputChange} />
@@ -270,10 +242,8 @@ function Projects() {
                   <option value="Draft">Draft</option>
                   <option value="Active">Active</option>
                   <option value="Completed">Completed</option>
-                  {/* Removed 'Planning', 'Executing', 'On Hold' based on new requirements */}
                 </select>
               </div>
-              {/* Stakeholder assignment will be handled on the project detail page */}
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={closeModal}>Cancel</button>
                 <button type="submit" className="btn-primary">{editingProject ? 'Save Changes' : 'Create Project'}</button>

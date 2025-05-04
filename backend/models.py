@@ -4,9 +4,9 @@ from datetime import datetime
 db = SQLAlchemy()
 
 # Association table for Project Stakeholders (Many-to-Many)
-project_stakeholders = db.Table('project_stakeholders',
-    db.Column('project_id', db.Integer, db.ForeignKey('project.id'), primary_key=True),
-    db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'), primary_key=True)
+project_stakeholders = db.Table("project_stakeholders",
+    db.Column("project_id", db.Integer, db.ForeignKey("project.id"), primary_key=True),
+    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
 )
 
 class Employee(db.Model):
@@ -15,12 +15,11 @@ class Employee(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     role = db.Column(db.String(80), nullable=True)
     department = db.Column(db.String(80), nullable=True)
-    # Add relationship back to projects where this employee is the owner
-    owned_projects = db.relationship('Project', backref='owner', lazy=True)
+    # Removed owned_projects relationship
     # Add relationship back to projects where this employee is a stakeholder
-    stakeholder_in_projects = db.relationship('Project', secondary=project_stakeholders,
-                                              lazy='subquery',
-                                              backref=db.backref('stakeholders', lazy=True))
+    stakeholder_in_projects = db.relationship("Project", secondary=project_stakeholders,
+                                              lazy="subquery",
+                                              backref=db.backref("stakeholders", lazy=True))
 
     def to_dict(self):
         return {
@@ -35,12 +34,11 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    # Link to the Employee who owns the project
-    project_owner_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True) # Made nullable for now, requirement says dropdown
+    # Removed project_owner_id field
     start_date = db.Column(db.DateTime, nullable=True)
     end_date = db.Column(db.DateTime, nullable=True)
     # Status options: Draft, Active, Completed (as per requirements)
-    status = db.Column(db.String(50), nullable=False, default='Draft')
+    status = db.Column(db.String(50), nullable=False, default="Draft")
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -53,8 +51,7 @@ class Project(db.Model):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "project_owner_id": self.project_owner_id,
-            "owner_name": self.owner.name if self.owner else None, # Include owner name
+            # Removed owner fields
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "status": self.status,
