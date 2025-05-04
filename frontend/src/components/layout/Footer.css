@@ -1,0 +1,11 @@
+/* Footer.css */
+
+.app-footer {
+  background-color: var(--brightfold-charcoal);
+  color: var(--brightfold-light-gray);
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: auto; /* Push footer to the bottom */
+}
+
