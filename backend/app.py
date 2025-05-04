@@ -16,9 +16,10 @@ def seed_database():
     # Check and seed employees
     if not Employee.query.first():
         print("Seeding initial employee data...")
-        emp1 = Employee(name="Alice Wonderland", email="alice@example.com", role="Project Manager", department="IT")
-        emp2 = Employee(name="Bob The Builder", email="bob@example.com", role="Developer", department="Engineering")
-        emp3 = Employee(name="Charlie Chaplin", email="charlie@example.com", role="Change Lead", department="HR")
+        # Use job_position instead of role
+        emp1 = Employee(name="Alice Wonderland", email="alice@example.com", job_position="Project Manager", department="IT")
+        emp2 = Employee(name="Bob The Builder", email="bob@example.com", job_position="Developer", department="Engineering")
+        emp3 = Employee(name="Charlie Chaplin", email="charlie@example.com", job_position="Change Lead", department="HR")
         db.session.add_all([emp1, emp2, emp3])
         db.session.commit()
         print("Employee seeding complete.")
@@ -81,9 +82,11 @@ def create_app():
     # Import blueprints AFTER db is initialized
     from api.project_routes import project_bp
     from api.assessment_routes import assessment_bp
+    from api.employee_routes import employee_bp # Import employee blueprint
 
     app.register_blueprint(project_bp)
     app.register_blueprint(assessment_bp)
+    app.register_blueprint(employee_bp) # Register employee blueprint
 
     # Create database tables and seed data within app context
     with app.app_context():
