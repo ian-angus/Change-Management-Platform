@@ -28,6 +28,7 @@
   text-decoration: none;
   transition: background-color 0.2s ease, color 0.2s ease, border-left 0.2s ease;
   border-left: 5px solid transparent;
+  position: relative; /* Needed for submenu toggle icon positioning */
 }
 
 .app-sidebar nav li a svg {
@@ -50,6 +51,36 @@
 
 .app-sidebar nav li a.active svg {
     color: var(--brightfold-white);
+}
+
+/* Submenu Styles */
+.app-sidebar .submenu {
+  list-style: none;
+  padding-left: 0; /* Remove default padding */
+  margin: 0;
+  background-color: var(--brightfold-light-gray); /* Slightly different background */
+}
+
+.app-sidebar .submenu li a {
+  padding-left: 40px; /* Indent submenu items */
+  border-left: 5px solid transparent; /* Reset border */
+}
+
+.app-sidebar .submenu li a:hover {
+  background-color: #e0e0e0; /* Darker hover for submenu */
+}
+
+.app-sidebar .submenu li a.active {
+  background-color: var(--brightfold-blue); /* Keep active style consistent */
+  color: var(--brightfold-white);
+  border-left: 5px solid var(--brightfold-orange);
+}
+
+.submenu-toggle-icon {
+  margin-left: auto; /* Push icon to the right */
+  padding-left: 10px;
+  display: inline-flex;
+  align-items: center;
 }
 
 
