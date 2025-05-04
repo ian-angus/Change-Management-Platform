@@ -56,7 +56,8 @@ def create_project():
     # Validate required fields (owner removed, phase added)
     required_fields = ["name", "status", "project_phase"]
     if not all(field in data for field in required_fields):
-        return jsonify({"error": f"Missing required fields: {", ".join(required_fields)}"}), 400
+        # Corrected f-string syntax
+        return jsonify({"error": f"Missing required fields: {', '.join(required_fields)}"}), 400
 
     # Validate status
     if data["status"] not in ["Draft", "Active", "Completed"]:
