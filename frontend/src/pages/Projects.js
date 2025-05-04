@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa'; // Removed FaEye for now
-// import { Link } from 'react-router-dom'; // Removed Link for now
+import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
 import './Projects.css';
+
+// Define PMI Phases (match backend)
+const PMI_PHASES = ["Initiating", "Planning", "Executing", "Monitoring & Controlling", "Closing"];
 
 function Projects() {
   const [projects, setProjects] = useState([]);
-  // Removed employees state as owner dropdown is removed
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,11 +14,10 @@ function Projects() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    // project_owner_id removed
     start_date: '',
     end_date: '',
     status: 'Draft',
-    // stakeholder_ids removed for now, handle on overview page
+    project_phase: 'Initiating', // Added project_phase with default
   });
 
   // Fetch projects
@@ -27,16 +27,21 @@ function Projects() {
     try {
       const projectsResponse = await fetch('/api/projects/');
       if (!projectsResponse.ok) {
-        throw new Error(`HTTP error! status: ${projectsResponse.status} fetching projects`);
+        // Try to get error message from backend response
+        let errorMsg = `HTTP error! status: ${projectsResponse.status} fetching projects`;
+        try {
+            const errorData = await projectsResponse.json();
+            errorMsg = errorData.error || errorMsg;
+        } catch (jsonError) {
+            // Ignore if response is not JSON
+        }
+        throw new Error(errorMsg);
       }
       const projectsData = await projectsResponse.json();
       setProjects(projectsData);
-
-      // Removed employee fetch as owner dropdown is removed
-
     } catch (e) {
       console.error("Failed to load projects:", e);
-      setError('Failed to load projects. Is the backend running and seeded?');
+      setError(`Failed to load projects: ${e.message}. Is the backend running and seeded?`);
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +67,7 @@ function Projects() {
       start_date: '',
       end_date: '',
       status: 'Draft',
+      project_phase: 'Initiating', // Reset phase
     });
   };
 
@@ -74,6 +80,7 @@ function Projects() {
       start_date: '',
       end_date: '',
       status: 'Draft',
+      project_phase: 'Initiating', // Default phase for new project
     });
     setIsModalOpen(true);
   };
@@ -84,10 +91,10 @@ function Projects() {
     setFormData({
       name: project.name || '',
       description: project.description || '',
-      // Format dates for input type='date'
       start_date: project.start_date ? project.start_date.split('T')[0] : '',
       end_date: project.end_date ? project.end_date.split('T')[0] : '',
       status: project.status || 'Draft',
+      project_phase: project.project_phase || 'Initiating', // Set phase from project data
     });
     setIsModalOpen(true);
   };
@@ -100,14 +107,13 @@ function Projects() {
 
     const payload = {
         ...formData,
-        // Convert empty date strings to null for backend
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
     };
 
-    // Basic validation (owner removed)
-    if (!payload.name || !payload.status) {
-        setError('Project Name and Status are required.');
+    // Basic validation (phase added)
+    if (!payload.name || !payload.status || !payload.project_phase) {
+        setError('Project Name, Status, and Phase are required.');
         return;
     }
 
@@ -164,13 +170,13 @@ function Projects() {
       {isLoading ? (
         <p>Loading projects...</p>
       ) : (
-        <div className="table-container"> {/* Added container for responsiveness */}
+        <div className="table-container">
           <table>
             <thead>
               <tr>
                 <th>Name</th>
-                {/*<th>Owner</th> Removed Owner column */}
                 <th>Status</th>
+                <th>Phase</th> {/* Added Phase column */}
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Stakeholders</th>
@@ -183,15 +189,13 @@ function Projects() {
                 projects.map((project) => (
                   <tr key={project.id}>
                     <td>{project.name}</td>
-                    {/*<td>{project.owner_name || 'N/A'}</td> Removed Owner display */}
                     <td><span className={`status-badge status-${project.status?.toLowerCase()}`}>{project.status}</span></td>
+                    <td>{project.project_phase || 'N/A'}</td> {/* Display phase */}
                     <td>{project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{project.end_date ? new Date(project.end_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{project.stakeholders?.length || 0}</td>
                     <td>{project.assessment_count || 0}</td>
                     <td className="actions-cell">
-                      {/* Link to Project Overview Page (implement later) */}
-                      {/* <Link to={`/projects/${project.id}`} className="action-btn" title="View Details"><FaEye /></Link> */}
                       <button onClick={() => openEditModal(project)} className="action-btn" title="Edit Project">
                         <FaEdit />
                       </button>
@@ -204,7 +208,7 @@ function Projects() {
               ) : (
                 <tr>
                   {/* Adjusted colspan */}
-                  <td colSpan="7">No projects found. Use the '+ New Project' button to create one.</td>
+                  <td colSpan="8">No projects found. Use the '+ New Project' button to create one.</td>
                 </tr>
               )}
             </tbody>
@@ -227,7 +231,6 @@ function Projects() {
                 <label htmlFor="description">Description</label>
                 <textarea id="description" name="description" value={formData.description} onChange={handleInputChange}></textarea>
               </div>
-              {/* Removed Project Owner dropdown */}
               <div className="form-group">
                 <label htmlFor="start_date">Start Date</label>
                 <input type="date" id="start_date" name="start_date" value={formData.start_date} onChange={handleInputChange} />
@@ -242,6 +245,15 @@ function Projects() {
                   <option value="Draft">Draft</option>
                   <option value="Active">Active</option>
                   <option value="Completed">Completed</option>
+                </select>
+              </div>
+              {/* Added Project Phase dropdown */}
+              <div className="form-group">
+                <label htmlFor="project_phase">Project Phase *</label>
+                <select id="project_phase" name="project_phase" value={formData.project_phase} onChange={handleInputChange} required>
+                  {PMI_PHASES.map(phase => (
+                    <option key={phase} value={phase}>{phase}</option>
+                  ))}
                 </select>
               </div>
               <div className="modal-actions">
