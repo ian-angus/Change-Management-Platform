@@ -38,17 +38,17 @@ function EmployeeManagement() {
   const [uploadStatus, setUploadStatus] = useState(''); // For bulk upload feedback
   const fileInputRef = useRef(null); // Ref for file input
 
-  // Use relative path for API calls - relies on proxy setting in package.json
-  const apiBaseUrl = '/api/employees';
+  // Use relative path with TRAILING SLASH for API calls
+  const apiBaseUrl = '/api/employees/'; // Ensure trailing slash
 
   // Fetch Employees Function
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      // Use apiBaseUrl which includes the trailing slash
       const response = await fetch(apiBaseUrl);
       if (!response.ok) {
-        // Try to get more specific error from backend if possible
         let errorMsg = `HTTP error! status: ${response.status} fetching employees`;
         try {
             const errorData = await response.json();
@@ -66,7 +66,7 @@ function EmployeeManagement() {
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl]); // Dependency array includes apiBaseUrl
 
   useEffect(() => {
     fetchEmployees();
@@ -108,7 +108,8 @@ function EmployeeManagement() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
-    const url = currentEmployee ? `${apiBaseUrl}/${currentEmployee.id}` : apiBaseUrl;
+    // Construct URL with trailing slash for POST, or include ID for PUT
+    const url = currentEmployee ? `${apiBaseUrl}${currentEmployee.id}` : apiBaseUrl;
     const method = currentEmployee ? 'PUT' : 'POST';
 
     try {
@@ -121,11 +122,18 @@ function EmployeeManagement() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        // Attempt to parse error message from backend
+        let errorMsg = `HTTP error! status: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+        } catch (jsonError) {
+            // Ignore if response is not JSON
+        }
+        throw new Error(errorMsg);
       }
       closeModal();
-      fetchEmployees();
+      fetchEmployees(); // Refresh list after successful operation
     } catch (e) {
       console.error(`Failed to ${currentEmployee ? 'update' : 'create'} employee:`, e);
       setApiError(e.message);
@@ -137,26 +145,32 @@ function EmployeeManagement() {
     if (!window.confirm("Are you sure you want to delete this employee?")) {
       return;
     }
-    // Clear main error before attempting delete
     setError(null);
     try {
-      const response = await fetch(`${apiBaseUrl}/${employeeId}`, {
+      // Construct URL with employee ID (trailing slash might not be needed here depending on route definition, but added for consistency)
+      const response = await fetch(`${apiBaseUrl}${employeeId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        let errorMsg = `HTTP error! status: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+        } catch (jsonError) {
+            // Ignore if response is not JSON
+        }
+        throw new Error(errorMsg);
       }
-      fetchEmployees();
+      fetchEmployees(); // Refresh list after successful deletion
     } catch (e) {
       console.error(`Failed to delete employee ${employeeId}:`, e);
-      setError(`Failed to delete employee: ${e.message}`); // Show error above table
+      setError(`Failed to delete employee: ${e.message}`);
     }
   };
 
   // Bulk Upload Handling
   const handleUploadClick = () => {
-    fileInputRef.current.click(); // Trigger hidden file input
+    fileInputRef.current.click();
   };
 
   const handleFileChange = async (event) => {
@@ -165,13 +179,14 @@ function EmployeeManagement() {
       return;
     }
     setUploadStatus('Uploading...');
-    setError(null); // Clear previous main errors
+    setError(null);
 
     const uploadFormData = new FormData();
     uploadFormData.append('file', file);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/upload`, {
+      // Construct URL for upload endpoint (ensure consistency with backend route)
+      const response = await fetch(`${apiBaseUrl}upload`, {
         method: 'POST',
         body: uploadFormData,
       });
@@ -186,7 +201,7 @@ function EmployeeManagement() {
       if (result.errors && result.errors.length > 0) {
         console.warn("Bulk Upload Errors:", result.errors);
       }
-      fetchEmployees(); // Refresh list
+      fetchEmployees();
 
     } catch (e) {
       console.error("Bulk upload failed:", e);
@@ -214,7 +229,6 @@ function EmployeeManagement() {
 
       {uploadStatus && <p style={{ color: uploadStatus.startsWith('Upload failed') ? 'red' : 'green', margin: '10px 0' }}>{uploadStatus}</p>}
       {loading && <p>Loading employees...</p>}
-      {/* Display fetch error prominently */}
       {error && !loading && <p className="error-message" style={{ border: '1px solid red', padding: '10px', backgroundColor: '#ffecec' }}>Error loading employee data: {error}</p>}
 
       {!loading && (
@@ -244,7 +258,6 @@ function EmployeeManagement() {
               ))
             ) : (
               <tr>
-                {/* Show different message if there was an error vs. genuinely no employees */}
                 <td colSpan="5">{error ? 'Could not load data.' : 'No employees found. Use \'+ Add Employee\' or \'Upload List\' to start.'}</td>
               </tr>
             )}
@@ -252,7 +265,6 @@ function EmployeeManagement() {
         </table>
       )}
 
-      {/* Add/Edit Modal */}
       <Modal show={isModalOpen} onClose={closeModal} title={currentEmployee ? 'Edit Employee' : 'Add New Employee'}>
         <form onSubmit={handleFormSubmit}>
           {apiError && <p className="error-message" style={{ marginBottom: '15px' }}>Error: {apiError}</p>}
