@@ -5,6 +5,7 @@ import Sidebar from './components/layout/Sidebar';
 import Footer from './components/layout/Footer';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
+import ProjectOverview from './pages/ProjectOverview'; // Import ProjectOverview
 import Assessments from './pages/Assessments';
 import Plans from './pages/Plans';
 import Stakeholders from './pages/Stakeholders';
@@ -24,6 +25,8 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
+              {/* Add route for individual project overview */}
+              <Route path="/projects/:projectId" element={<ProjectOverview />} />
               <Route path="/assessments" element={<Assessments />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/stakeholders" element={<Stakeholders />} />
