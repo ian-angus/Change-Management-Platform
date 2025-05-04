@@ -1,7 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
+# Import the shared db instance from extensions
+from extensions import db
 from datetime import datetime
-
-db = SQLAlchemy()
 
 # Association table for Project Stakeholders (Many-to-Many)
 project_stakeholders = db.Table("project_stakeholders",
