@@ -2,9 +2,10 @@ import React from 'react';
 
 function Plans() {
   return (
-    <div>
-      <h1>Communication Plans</h1>
-      <p>Communication plans content will be displayed here.</p>
+    <div className="plans-page">
+      <h2>Plans</h2>
+      <p>Manage communication and other plans here.</p>
+      {/* Placeholder content */}
     </div>
   );
 }

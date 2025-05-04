@@ -1,14 +1,16 @@
-/* /home/ubuntu/melyn_cm_platform/frontend/src/components/layout/Header.css */
-
+/* Header Styles */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 0 20px; /* Adjusted padding */
   background-color: #ffffff; /* White background */
-  border-bottom: 1px solid #e0e0e0; /* Light grey border */
+  border-bottom: 1px solid #e0e0e0; /* Light border */
   height: 60px; /* Fixed height */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky; /* Make header sticky */
+  top: 0;
+  z-index: 1000; /* Ensure header stays on top */
 }
 
 .logo-container {
@@ -16,20 +18,14 @@
   align-items: center;
 }
 
-.logo-img {
-  height: 40px; /* Adjust as needed */
-  margin-right: 10px;
+.logo-image {
+  height: 45px; /* Slightly larger logo */
+  /* margin-right: 10px; /* Removed margin if logo includes spacing */
 }
 
-.logo-text {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #333; /* Dark text color */
-  /* Add specific BrightFold font/color if known */
-}
+/* Removed logo-text styles */
 
 .header-actions {
-  /* Style for user actions, notifications, etc. */
-  color: #555;
+  /* Styles for user profile, notifications, etc. */
 }
 

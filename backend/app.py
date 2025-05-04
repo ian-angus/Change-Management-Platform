@@ -1,65 +1,62 @@
-# /home/ubuntu/melyn_cm_platform/backend/app.py
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
 
-# Import extensions
-from extensions import db, migrate
+# Import database models and blueprints
+from models import db  # Assuming db = SQLAlchemy() is in models.py
+from api.project_routes import project_bp
+from api.employee_routes import employee_bp
+from api.assessment_template_routes import assessment_template_bp
+from api.assessment_routes import assessment_bp
+from api.stakeholder_group_routes import stakeholder_group_bp
 
-def create_app():
-    """Application Factory Pattern"""
-    app = Flask(__name__)
+app = Flask(__name__)
 
-    # Configure database
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-        "DATABASE_URL", "sqlite:///../instance/mydatabase.db"
-    )
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Configuration
+# Use environment variable for database URI if available, otherwise default to SQLite
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "sqlite:///../instance/mydatabase.db"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev") # Use a strong secret key in production
 
-    # Initialize extensions with app
-    db.init_app(app)
-    migrate.init_app(app, db)
+# Enable CORS for all domains on all routes
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-    # Enable CORS
-    CORS(app)
+# Initialize extensions
+db.init_app(app)
 
-    # Import models here AFTER db is initialized with app, 
-    # but ensure they are defined before blueprints that use them.
-    # This structure helps avoid circular imports if models don't import app.
-    with app.app_context():
-        # Import models within context if needed for operations like create_all
-        # from models import Project, Assessment, Employee, StakeholderGroup, AssessmentTemplate, AssessmentQuestion
-        # db.create_all() # Usually handled by migrations
-        pass
+# Register blueprints
+app.register_blueprint(project_bp, url_prefix="/api")
+app.register_blueprint(employee_bp, url_prefix="/api")
+app.register_blueprint(assessment_template_bp, url_prefix="/api")
+app.register_blueprint(assessment_bp, url_prefix="/api")
+app.register_blueprint(stakeholder_group_bp, url_prefix="/api")
 
-    # Import and register blueprints
-    from api.project_routes import project_bp
-    from api.assessment_routes import assessment_bp
-    from api.employee_routes import employee_bp
-    from api.stakeholder_group_routes import stakeholder_group_bp
-    from api.assessment_template_routes import assessment_template_bp # Import new blueprint
-
-    app.register_blueprint(project_bp, url_prefix="/api/projects")
-    app.register_blueprint(assessment_bp, url_prefix="/api/assessments")
-    app.register_blueprint(employee_bp, url_prefix="/api/employees")
-    app.register_blueprint(stakeholder_group_bp, url_prefix="/api/stakeholder-groups")
-    app.register_blueprint(assessment_template_bp, url_prefix="/api/assessment-templates") # Register new blueprint
-
-    # Basic route for testing
-    @app.route("/")
-    def hello_world():
-        return "Hello from BrightFold Backend!"
-
-    return app
-
-if __name__ == "__main__":
-    app = create_app()
+# Create database tables if they don't exist
+with app.app_context():
     # Ensure the instance folder exists
-    instance_path = os.path.join(app.root_path, "../instance")
+    instance_path = os.path.join(app.instance_path)
     if not os.path.exists(instance_path):
         os.makedirs(instance_path)
         print(f"Created instance folder at {instance_path}")
+    else:
+        print(f"Instance folder already exists at {instance_path}")
 
-    # Run the app
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    try:
+        db.create_all()
+        print("Database tables created (if they didn't exist).")
+    except Exception as e:
+        print(f"Error creating database tables: {e}")
+
+@app.route("/")
+def hello():
+    return "Backend server is running!"
+
+if __name__ == "__main__":
+    # Use 0.0.0.0 to make the server accessible externally
+    # Use port 5001 as previously established
+    app.run(debug=True, host="0.0.0.0", port=5001)
 
