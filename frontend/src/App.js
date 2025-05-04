@@ -5,9 +5,13 @@ import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Assessments from './pages/Assessments';
-import Plans from './pages/Plans'; // Assuming Plans page exists
-import Stakeholders from './pages/Stakeholders'; // Assuming Stakeholders page exists
-// Import other pages like Settings if they exist
+import Plans from './pages/Plans';
+import Stakeholders from './pages/Stakeholders';
+// Import Settings Pages
+import SettingsEmployeeManagement from './pages/settings/SettingsEmployeeManagement';
+import SettingsGroupManagement from './pages/settings/SettingsGroupManagement';
+import SettingsAssessmentTemplates from './pages/settings/SettingsAssessmentTemplates';
+
 import './App.css'; // Main App CSS
 
 function App() {
@@ -28,9 +32,13 @@ function App() {
               <Route path="/projects" element={<Projects apiBaseUrl={API_BASE_URL} />} />
               <Route path="/assessments" element={<Assessments apiBaseUrl={API_BASE_URL} />} />
               <Route path="/plans" element={<Plans />} />
-              <Route path="/stakeholders" element={<Stakeholders />} />
-              {/* Add routes for Settings, etc. */}
-              {/* <Route path="/settings" element={<Settings />} /> */}
+              <Route path="/stakeholders" element={<Stakeholders apiBaseUrl={API_BASE_URL} />} />
+              {/* Settings Routes */}
+              <Route path="/settings/employees" element={<SettingsEmployeeManagement apiBaseUrl={API_BASE_URL} />} />
+              <Route path="/settings/groups" element={<SettingsGroupManagement apiBaseUrl={API_BASE_URL} />} />
+              <Route path="/settings/templates" element={<SettingsAssessmentTemplates apiBaseUrl={API_BASE_URL} />} />
+              {/* Add a default route for /settings or redirect? */}
+              {/* <Route path="/settings" element={<Navigate to="/settings/employees" replace />} /> */}
             </Routes>
           </main>
         </div>

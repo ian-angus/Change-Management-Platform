@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import ManageProjectEmployeesModal from './ManageProjectEmployeesModal'; // Import the modal component
+import React, { useState, useEffect, useCallback } from 'react';
+import ManageProjectEmployeesModal from './ManageProjectEmployeesModal'; // Import the employee management modal
+import CreateProjectModal from './CreateProjectModal'; // Import the project creation modal
 import './Projects.css'; // Make sure CSS is imported
 
 function Projects({ apiBaseUrl }) {
@@ -7,30 +8,31 @@ function Projects({ apiBaseUrl }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        setError(null); // Reset error state on new fetch
-        const response = await fetch(`${apiBaseUrl}/projects`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setProjects(data);
-      } catch (err) {
-        console.error("Failed to fetch projects:", err);
-        setError("Failed to load projects. Please check the connection or try again later.");
-        setProjects([]); // Clear projects on error
-      } finally {
-        setLoading(false);
+  const fetchProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null); // Reset error state on new fetch
+      const response = await fetch(`${apiBaseUrl}/projects`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      setProjects(data);
+    } catch (err) {
+      console.error("Failed to fetch projects:", err);
+      setError("Failed to load projects. Please check the connection or try again later.");
+      setProjects([]); // Clear projects on error
+    } finally {
+      setLoading(false);
+    }
+  }, [apiBaseUrl]);
 
+  useEffect(() => {
     fetchProjects();
-  }, [apiBaseUrl]); // Re-run effect if apiBaseUrl changes
+  }, [fetchProjects]); // Use the memoized fetchProjects
 
   const handleOpenManageModal = (project) => {
     setSelectedProject(project);
@@ -43,16 +45,30 @@ function Projects({ apiBaseUrl }) {
     // Optionally refetch project data or employee data if changes were made
   };
 
+  const handleOpenCreateModal = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = (projectCreated) => {
+    setShowCreateModal(false);
+    if (projectCreated) {
+      fetchProjects(); // Refetch projects if a new one was created
+    }
+  };
+
   return (
     <div className="projects-page">
-      <h2>Projects</h2>
+      <div className="page-header">
+        <h2>Projects</h2>
+        <button onClick={handleOpenCreateModal} className="add-project-btn">
+          Create New Project
+        </button>
+      </div>
+
       {loading && <p>Loading projects...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error-message">{error}</p>}
       {!loading && !error && (
         <>
-          {/* Add Project button/modal placeholder - To be implemented later */}
-          {/* <button className="add-project-btn">Add New Project</button> */}
-
           {projects.length > 0 ? (
             <>
               <p>Manage your change management projects here.</p>
@@ -68,17 +84,23 @@ function Projects({ apiBaseUrl }) {
               </ul>
             </>
           ) : (
-            <p>No projects found. You can add a new project to get started.</p> // Display message when no projects exist
+            <p>No projects found. Create a new project to get started.</p> // Updated message
           )}
         </>
       )}
 
-      {/* Render the modal */}
+      {/* Render the modals */}
       {showManageModal && selectedProject && (
         <ManageProjectEmployeesModal
           project={selectedProject}
           apiBaseUrl={apiBaseUrl}
           onClose={handleCloseManageModal}
+        />
+      )}
+      {showCreateModal && (
+        <CreateProjectModal
+          apiBaseUrl={apiBaseUrl}
+          onClose={handleCloseCreateModal}
         />
       )}
     </div>
