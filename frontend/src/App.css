@@ -1,27 +1,52 @@
+/* General App Styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7fa; /* Light background for the body */
+}
+
 .app-container {
   display: flex;
-}
-
-.main-content {
-  flex-grow: 1;
-  display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-.app-header {
-  background-color: #f8f9fa; /* Example header background */
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
+.main-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-grow: 1;
+  /* Account for fixed header height */
+  padding-top: 60px; /* Match header height */
 }
 
 .content-area {
-  padding: 1rem;
   flex-grow: 1;
-  background-color: #fff; /* Example content area background */
+  padding: 20px;
+  /* Account for fixed sidebar width */
+  margin-left: 250px; /* Match sidebar width */
+  background-color: #ffffff; /* White background for content */
+  /* Removed margin and shadow for cleaner integration, can be added back if needed */
+  /* border-radius: 8px; */
+  /* margin: 20px; */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
-/* Add other global styles as needed */
+/* Basic Page Styling (can be moved to specific page CSS files) */
+.dashboard-page,
+.projects-page,
+.assessments-page,
+.plans-page,
+.stakeholders-page {
+  /* Add specific page styles if needed */
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Add more global styles as needed */
 

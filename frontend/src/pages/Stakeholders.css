@@ -1,0 +1,32 @@
+/* Stakeholders Page Specific Styles */
+
+.stakeholders-page {
+  /* Add styles for stakeholder group list, filter, modals, etc. */
+}
+
+/* Example: Style for the filter dropdown */
+.stakeholders-page label {
+  margin-right: 10px;
+}
+
+.stakeholders-page select {
+  padding: 8px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Example: Style for the stakeholder group list */
+.stakeholders-page ul {
+  list-style: none;
+  padding: 0;
+}
+
+.stakeholders-page li {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
