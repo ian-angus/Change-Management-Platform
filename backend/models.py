@@ -12,10 +12,11 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(80), nullable=True)
+    # Renamed 'role' to 'job_position' as per user request
+    job_position = db.Column(db.String(80), nullable=True)
     department = db.Column(db.String(80), nullable=True)
-    # Removed owned_projects relationship
-    # Add relationship back to projects where this employee is a stakeholder
+
+    # Relationship back to projects where this employee is a stakeholder
     stakeholder_in_projects = db.relationship("Project", secondary=project_stakeholders,
                                               lazy="subquery",
                                               backref=db.backref("stakeholders", lazy=True))
@@ -25,7 +26,7 @@ class Employee(db.Model):
             "id": self.id,
             "name": self.name,
             "email": self.email,
-            "role": self.role,
+            "job_position": self.job_position, # Updated field name
             "department": self.department
         }
 
@@ -33,34 +34,28 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    # Removed project_owner_id field
     start_date = db.Column(db.DateTime, nullable=True)
     end_date = db.Column(db.DateTime, nullable=True)
-    # Status options: Draft, Active, Completed (as per requirements)
     status = db.Column(db.String(50), nullable=False, default="Draft")
-    # Add Project Phase based on PMI
-    project_phase = db.Column(db.String(50), nullable=True, default="Initiating") # Default to Initiating
+    project_phase = db.Column(db.String(50), nullable=True, default="Initiating")
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationship to Assessments
     assessments = db.relationship("Assessment", backref="project", lazy=True, cascade="all, delete-orphan")
-    # Stakeholders relationship defined via backref from Employee
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            # Removed owner fields
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "status": self.status,
-            "project_phase": self.project_phase, # Added project phase
+            "project_phase": self.project_phase,
             "creation_date": self.creation_date.isoformat() if self.creation_date else None,
             "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
-            "stakeholders": [stakeholder.to_dict() for stakeholder in self.stakeholders], # Include stakeholders
-            "assessment_count": len(self.assessments) # Example derived field
+            "stakeholders": [stakeholder.to_dict() for stakeholder in self.stakeholders],
+            "assessment_count": len(self.assessments)
         }
 
 class Assessment(db.Model):
@@ -70,7 +65,7 @@ class Assessment(db.Model):
     status = db.Column(db.String(50), nullable=False, default="Not Started")
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     completion_date = db.Column(db.DateTime, nullable=True)
-    results = db.Column(db.JSON, nullable=True) # Store assessment results as JSON
+    results = db.Column(db.JSON, nullable=True)
     risk_level = db.Column(db.String(50), nullable=True)
     readiness_score = db.Column(db.Integer, nullable=True)
 

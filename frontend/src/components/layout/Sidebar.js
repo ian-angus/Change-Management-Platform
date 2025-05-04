@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaChartBar } from 'react-icons/fa'; // Example icons
+import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaCog } from 'react-icons/fa'; // Added FaCog for Settings
 
 function Sidebar() {
   return (
@@ -33,14 +33,22 @@ function Sidebar() {
               <FaUsers /> Stakeholders
             </NavLink>
           </li>
-          {/* Add Reports link if implemented */}
-          {/*
+          {/* Add Settings link */}
           <li>
-            <NavLink to="/reports" className={({ isActive }) => isActive ? "active" : ""}>
-              <FaChartBar /> Reports
+            {/* For now, link directly to Employee Management. Submenu can be added later if needed. */}
+            <NavLink to="/settings/employees" className={({ isActive }) => isActive ? "active" : ""}>
+              <FaCog /> Settings
             </NavLink>
+            {/* Example Submenu (implement later if needed)
+            <ul className="submenu">
+              <li>
+                <NavLink to="/settings/employees" className={({ isActive }) => isActive ? "active" : ""}>
+                  Employee Management
+                </NavLink>
+              </li>
+            </ul>
+            */}
           </li>
-          */}
         </ul>
       </nav>
     </aside>
