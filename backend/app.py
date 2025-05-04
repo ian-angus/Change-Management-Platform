@@ -10,6 +10,8 @@ def seed_database():
     """Seeds the database with initial data if it's empty."""
     # Import models inside the function to ensure app context is active
     from models import Project, Assessment, Employee
+    # Import PMI phases from routes (or define centrally)
+    from api.project_routes import PMI_PHASES
 
     # Check and seed employees
     if not Employee.query.first():
@@ -35,15 +37,15 @@ def seed_database():
             description="Migrate legacy system to new cloud platform.",
             start_date=datetime(2024, 1, 15),
             end_date=datetime(2024, 12, 31),
-            status="Active"
-            # Add phase later
+            status="Active",
+            project_phase="Executing" # Assign phase
         )
         proj2 = Project(
             name="Operation Evergreen",
             description="Implement new HR onboarding process.",
             start_date=datetime(2024, 3, 1),
-            status="Draft"
-            # Add phase later
+            status="Draft",
+            project_phase="Planning" # Assign phase
         )
         db.session.add_all([proj1, proj2])
         db.session.commit() # Commit projects first to get IDs

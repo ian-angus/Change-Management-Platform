@@ -38,6 +38,8 @@ class Project(db.Model):
     end_date = db.Column(db.DateTime, nullable=True)
     # Status options: Draft, Active, Completed (as per requirements)
     status = db.Column(db.String(50), nullable=False, default="Draft")
+    # Add Project Phase based on PMI
+    project_phase = db.Column(db.String(50), nullable=True, default="Initiating") # Default to Initiating
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -54,6 +56,7 @@ class Project(db.Model):
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "status": self.status,
+            "project_phase": self.project_phase, # Added project phase
             "creation_date": self.creation_date.isoformat() if self.creation_date else None,
             "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
             "stakeholders": [stakeholder.to_dict() for stakeholder in self.stakeholders], # Include stakeholders

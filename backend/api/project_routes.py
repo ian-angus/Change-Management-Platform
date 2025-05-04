@@ -1,23 +1,24 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from models import Project, Employee, Assessment # Import Employee and Assessment
+from extensions import db # Import shared db instance
+from models import Project, Employee, Assessment
 from datetime import datetime
 
 project_bp = Blueprint("project_bp", __name__, url_prefix="/api/projects")
+
+# Define PMI Phases
+PMI_PHASES = ["Initiating", "Planning", "Executing", "Monitoring & Controlling", "Closing"]
 
 # Helper function to parse dates safely
 def parse_date(date_string):
     if not date_string:
         return None
     try:
-        # Attempt to parse various ISO-like formats
         return datetime.fromisoformat(date_string.replace("Z", "+00:00"))
     except ValueError:
         try:
-            # Fallback for YYYY-MM-DD format
             return datetime.strptime(date_string, "%Y-%m-%d")
         except ValueError:
-            return None # Indicate parsing failure
+            return None
 
 @project_bp.route("/", methods=["GET"])
 def get_projects():
@@ -47,35 +48,35 @@ def get_project_details(project_id):
 
 @project_bp.route("/", methods=["POST"])
 def create_project():
-    """Create a new project based on detailed requirements (owner removed)."""
+    """Create a new project (owner removed, phase added)."""
     data = request.get_json()
     if not data or not data.get("name"):
         return jsonify({"error": "Project name is required"}), 400
 
-    # Validate required fields (owner removed)
-    required_fields = ["name", "status"]
+    # Validate required fields (owner removed, phase added)
+    required_fields = ["name", "status", "project_phase"]
     if not all(field in data for field in required_fields):
-        return jsonify({"error": f"Missing required fields: {', '.join(required_fields)}"}), 400
+        return jsonify({"error": f"Missing required fields: {", ".join(required_fields)}"}), 400
 
     # Validate status
     if data["status"] not in ["Draft", "Active", "Completed"]:
-        return jsonify({"error": "Invalid status value."}) , 400
+        return jsonify({"error": "Invalid status value."}), 400
 
-    # Removed owner validation
+    # Validate project phase
+    if data["project_phase"] not in PMI_PHASES:
+        return jsonify({"error": "Invalid project phase value."}), 400
 
     start_date = parse_date(data.get("start_date"))
     end_date = parse_date(data.get("end_date"))
-
-    # Optional: Add validation for date logic (e.g., end_date >= start_date)
 
     try:
         new_project = Project(
             name=data["name"],
             description=data.get("description"),
-            # project_owner_id removed
             start_date=start_date,
             end_date=end_date,
-            status=data["status"]
+            status=data["status"],
+            project_phase=data["project_phase"] # Added phase
         )
         db.session.add(new_project)
         db.session.commit()
@@ -90,7 +91,7 @@ def create_project():
 
 @project_bp.route("/<int:project_id>", methods=["PUT"])
 def update_project(project_id):
-    """Update an existing project (owner removed)."""
+    """Update an existing project (owner removed, phase added)."""
     project = Project.query.get_or_404(project_id)
     data = request.get_json()
     if not data:
@@ -100,7 +101,6 @@ def update_project(project_id):
         # Update fields if they exist in the request data
         if "name" in data: project.name = data["name"]
         if "description" in data: project.description = data["description"]
-        # Removed owner update logic
         if "start_date" in data:
              parsed_start = parse_date(data["start_date"])
              if data["start_date"] is not None and parsed_start is None:
@@ -113,13 +113,18 @@ def update_project(project_id):
             project.end_date = parsed_end
         if "status" in data:
             if data["status"] not in ["Draft", "Active", "Completed"]:
-                return jsonify({"error": "Invalid status value."}) , 400
+                return jsonify({"error": "Invalid status value."}), 400
             project.status = data["status"]
+        # Update project phase
+        if "project_phase" in data:
+            if data["project_phase"] not in PMI_PHASES:
+                return jsonify({"error": "Invalid project phase value."}), 400
+            project.project_phase = data["project_phase"]
 
         # Handle stakeholder updates
         if "stakeholder_ids" in data and isinstance(data["stakeholder_ids"], list):
             valid_stakeholders = Employee.query.filter(Employee.id.in_(data["stakeholder_ids"])).all()
-            project.stakeholders = valid_stakeholders # Replace existing stakeholders
+            project.stakeholders = valid_stakeholders
 
         db.session.commit()
         return jsonify({
@@ -133,13 +138,9 @@ def update_project(project_id):
 
 @project_bp.route("/<int:project_id>", methods=["DELETE"])
 def delete_project(project_id):
-    """Delete a project (archive might be better later)."""
+    """Delete a project."""
     try:
         project = Project.query.get_or_404(project_id)
-
-        # Delete associated assessments first due to cascade (or handle differently)
-        # Assessment.query.filter_by(project_id=project_id).delete()
-
         db.session.delete(project)
         db.session.commit()
         return jsonify({"message": f"Project ID {project_id} deleted successfully."}), 200
@@ -170,7 +171,7 @@ def add_stakeholder_to_project(project_id):
         db.session.commit()
         return jsonify({
             "message": f"Employee {employee.name} added as stakeholder to project {project.name}",
-            "project": project.to_dict() # Return updated project
+            "project": project.to_dict()
         }), 201
     except Exception as e:
         db.session.rollback()
@@ -191,7 +192,7 @@ def remove_stakeholder_from_project(project_id, employee_id):
         db.session.commit()
         return jsonify({
             "message": f"Employee {employee.name} removed as stakeholder from project {project.name}",
-            "project": project.to_dict() # Return updated project
+            "project": project.to_dict()
         }), 200
     except Exception as e:
         db.session.rollback()
@@ -201,7 +202,6 @@ def remove_stakeholder_from_project(project_id, employee_id):
 # --- Employee Route (for dropdowns, still needed for stakeholders) ---
 
 @project_bp.route("/../employees", methods=["GET"])
-# Using .. to navigate out of /api/projects, might need a dedicated employee blueprint later
 def get_employees():
     """Get a list of all employees."""
     try:
