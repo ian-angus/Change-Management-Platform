@@ -27,6 +27,7 @@
 .data-table th {
   background-color: #f2f2f2;
   font-weight: bold;
+  color: #333; /* Added dark color for header text */
 }
 
 .data-table tr:nth-child(even) {
