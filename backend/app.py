@@ -1,11 +1,10 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
 
-# Initialize SQLAlchemy instance
-db = SQLAlchemy()
+# Import db instance from extensions
+from extensions import db
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -26,12 +25,12 @@ def create_app():
     db.init_app(app)
     CORS(app) # Enable CORS for all routes
 
-    # Import and register blueprints
+    # Import and register blueprints within app context
     with app.app_context():
-        # Import models here to ensure they are known to SQLAlchemy
-        from models import Project, Assessment, Employee # Import Employee
+        # Import models here AFTER db is initialized with app
+        from models import Project, Assessment, Employee
 
-        # Import blueprints after models are known
+        # Import blueprints
         from api.project_routes import project_bp
         from api.assessment_routes import assessment_bp
 
@@ -42,6 +41,7 @@ def create_app():
         db.create_all()
 
         # --- Seed Data (for development/testing) ---
+        # Check and seed data within the app context
         if not Employee.query.first(): # Check if employees exist
             print("Seeding initial employee data...")
             emp1 = Employee(name="Alice Wonderland", email="alice@example.com", role="Project Manager", department="IT")
@@ -50,18 +50,18 @@ def create_app():
             db.session.add_all([emp1, emp2, emp3])
             db.session.commit()
             print("Employee seeding complete.")
+        else:
+            print("Employee data already exists, skipping seeding.")
 
         if not Project.query.first(): # Check if projects exist
             print("Seeding initial project data...")
-            owner1 = Employee.query.filter_by(email="alice@example.com").first()
-            owner3 = Employee.query.filter_by(email="charlie@example.com").first()
+            # Fetch employees again within this context if needed, or ensure they exist
             stakeholder1 = Employee.query.filter_by(email="alice@example.com").first()
             stakeholder2 = Employee.query.filter_by(email="bob@example.com").first()
 
             proj1 = Project(
                 name="Project Phoenix",
                 description="Migrate legacy system to new cloud platform.",
-                project_owner_id=owner1.id if owner1 else None,
                 start_date=datetime(2024, 1, 15),
                 end_date=datetime(2024, 12, 31),
                 status="Active"
@@ -69,7 +69,6 @@ def create_app():
             proj2 = Project(
                 name="Operation Evergreen",
                 description="Implement new HR onboarding process.",
-                project_owner_id=owner3.id if owner3 else None,
                 start_date=datetime(2024, 3, 1),
                 status="Draft"
             )
@@ -77,11 +76,13 @@ def create_app():
             db.session.commit() # Commit projects first to get IDs
 
             # Add stakeholders after projects are committed
-            if stakeholder1: proj1.stakeholders.append(stakeholder1)
-            if stakeholder2: proj1.stakeholders.append(stakeholder2)
-            if stakeholder1: proj2.stakeholders.append(stakeholder1)
+            if proj1 and stakeholder1: proj1.stakeholders.append(stakeholder1)
+            if proj1 and stakeholder2: proj1.stakeholders.append(stakeholder2)
+            if proj2 and stakeholder1: proj2.stakeholders.append(stakeholder1)
             db.session.commit()
             print("Project seeding complete.")
+        else:
+             print("Project data already exists, skipping seeding.")
         # --- End Seed Data ---
 
     @app.route("/")
