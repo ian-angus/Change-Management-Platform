@@ -441,40 +441,40 @@ function GroupManagement() {
 
                             {/* Add Members Section */} 
                             <div className="member-section add-members-section">
-                                <h3>Add Employees</h3>
-                                <SearchInput
-                                    value={memberSearchTerm}
-                                    onChange={handleMemberSearchChange}
-                                    placeholder="Search employees by name, email, dept..."
-                                />
-                                <ul className="employee-list-to-add scrollable-list">
-                                    {availableEmployeesToAdd.length > 0 ? (
-                                        availableEmployeesToAdd.map(emp => (
-                                            <li key={emp.id}>
-                                                <label>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedEmployeesToAdd.has(emp.id)}
-                                                        onChange={() => handleEmployeeSelectionChange(emp.id)}
-                                                        disabled={isLoading}
-                                                    />
-                                                    {emp.name} ({emp.email})
-                                                    <small> - {emp.department || 'N/A'} / {emp.job_position || 'N/A'}</small>
-                                                </label>
-                                            </li>
-                                        ))
-                                    ) : (
-                                        <li>{memberSearchTerm ? 'No matching employees found.' : 'All employees are already members or none exist.'}</li>
-                                    )}
-                                </ul>
-                                <button
-                                    onClick={handleAddSelectedMembers}
-                                    disabled={isLoading || selectedEmployeesToAdd.size === 0}
-                                    className="add-members-button"
-                                >
-                                    {isLoading ? 'Adding...' : `Add Selected (${selectedEmployeesToAdd.size})`}
-                                </button>
-                            </div>
+                                                         <div className="member-section add-employees-section">
+                                    <h3>Add Employees</h3>
+                                    {/* Moved SearchInput here */}
+                                    <SearchInput
+                                        value={memberSearchTerm}
+                                        onChange={handleMemberSearchChange}
+                                        placeholder="Search employees by name, email..."
+                                    />
+                                    <ul className="employee-list-to-add scrollable-list">
+                                        {availableEmployeesToAdd.length > 0 ? (
+                                            availableEmployeesToAdd.map(emp => (
+                                                <li key={emp.id}>
+                                                    <label>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedEmployeesToAdd.has(emp.id)}
+                                                            onChange={() => handleEmployeeSelectionChange(emp.id)}
+                                                        />
+                                                        {emp.name} <small>({emp.email})</small>
+                                                    </label>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li>{memberSearchTerm ? "No matching employees found." : "All employees are already members or none exist."}</li>
+                                        )}
+                                    </ul>
+                                    <button
+                                        onClick={handleAddSelectedMembers}
+                                        disabled={selectedEmployeesToAdd.size === 0 || isLoading}
+                                        className="add-members-button"
+                                    >
+                                        {isLoading ? "Adding..." : `Add Selected (${selectedEmployeesToAdd.size})`}
+                                    </button>
+                                </div>                    </div>
                         </div>
 
                         <div className="modal-actions">

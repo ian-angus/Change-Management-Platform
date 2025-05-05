@@ -356,3 +356,37 @@
     overflow-y: auto;
 }
 
+
+
+/* --- Enhanced Member Management UX Styles --- */
+
+.add-employees-section .search-input-wrapper {
+    margin-bottom: 1.5rem; /* Add more space below search */
+}
+
+.add-employees-section .search-input {
+    padding: 10px 12px 10px 38px; /* Slightly larger padding */
+    font-size: 0.95rem;
+}
+
+.employee-list-to-add li {
+    padding: 10px 12px; /* Consistent padding */
+    transition: background-color 0.2s ease;
+}
+
+.employee-list-to-add li:nth-child(odd) {
+    background-color: #f9f9f9; /* Zebra striping */
+}
+
+.employee-list-to-add li:hover {
+    background-color: #f0f0f0; /* Hover effect */
+}
+
+.employee-list-to-add li label {
+    font-size: 0.95rem; /* Slightly larger font */
+}
+
+.employee-list-to-add li small {
+    font-size: 0.85rem; /* Adjust email font size */
+}
+
