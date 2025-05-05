@@ -10,6 +10,7 @@ import Assessments from './pages/Assessments';
 import Plans from './pages/Plans';
 import Stakeholders from './pages/Stakeholders';
 import EmployeeManagement from './pages/EmployeeManagement'; // Import EmployeeManagement
+import GroupManagement from './pages/GroupManagement'; // Import GroupManagement
 // Import Reports page if it exists
 // import Reports from './pages/Reports';
 import './App.css';
@@ -32,6 +33,8 @@ function App() {
               <Route path="/stakeholders" element={<Stakeholders />} />
               {/* Add route for Employee Management under Settings */}
               <Route path="/settings/employees" element={<EmployeeManagement />} />
+              {/* Add route for Group Management under Settings */}
+              <Route path="/settings/groups" element={<GroupManagement />} />
               {/* Add route for Reports if implemented */}
               {/* <Route path="/reports" element={<Reports />} /> */}
               {/* Optional: Add a catch-all or redirect for /settings if needed */}

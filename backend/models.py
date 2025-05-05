@@ -8,11 +8,16 @@ project_stakeholders = db.Table("project_stakeholders",
     db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
 )
 
+# Association table for Group Members (Many-to-Many)
+group_members = db.Table("group_members",
+    db.Column("group_id", db.Integer, db.ForeignKey("group.id"), primary_key=True),
+    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
+)
+
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    # Renamed 'role' to 'job_position' as per user request
     job_position = db.Column(db.String(80), nullable=True)
     department = db.Column(db.String(80), nullable=True)
 
@@ -21,14 +26,41 @@ class Employee(db.Model):
                                               lazy="subquery",
                                               backref=db.backref("stakeholders", lazy=True))
 
+    # Relationship back to groups this employee belongs to
+    member_of_groups = db.relationship("Group", secondary=group_members,
+                                       lazy="subquery",
+                                       backref=db.backref("members", lazy=True))
+
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "email": self.email,
-            "job_position": self.job_position, # Updated field name
+            "job_position": self.job_position,
             "department": self.department
         }
+
+class Group(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # members relationship defined via backref from Employee
+
+    def to_dict(self, include_members=False):
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "creation_date": self.creation_date.isoformat() if self.creation_date else None,
+            "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
+            "member_count": len(self.members)
+        }
+        if include_members:
+            data["members"] = [member.to_dict() for member in self.members]
+        return data
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,6 +74,7 @@ class Project(db.Model):
     last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     assessments = db.relationship("Assessment", backref="project", lazy=True, cascade="all, delete-orphan")
+    # stakeholders relationship defined via backref from Employee
 
     def to_dict(self):
         return {

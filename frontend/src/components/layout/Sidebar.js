@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; // Import useState
 import { NavLink, useLocation } from 'react-router-dom'; // Import useLocation
 import './Sidebar.css';
-import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaCog, FaChevronDown, FaChevronRight } from 'react-icons/fa'; // Added FaCog, Chevrons
+import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaCog, FaChevronDown, FaChevronRight, FaLayerGroup, FaUserCog } from 'react-icons/fa'; // Added FaCog, Chevrons, FaLayerGroup, FaUserCog
 
 function Sidebar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -13,11 +13,13 @@ function Sidebar() {
   // Toggle Settings submenu
   const toggleSettings = (e) => {
     // Prevent navigation if clicking the main Settings item itself
-    if (e.target.closest('a').getAttribute('href') === '#') {
+    // Check if the closest anchor's href is exactly '#' to target the main toggle link
+    const anchor = e.target.closest('a');
+    if (anchor && anchor.getAttribute('href') === '#') {
         e.preventDefault();
         setIsSettingsOpen(!isSettingsOpen);
     }
-    // Allow navigation if clicking a submenu item
+    // Allow navigation if clicking a submenu item (NavLink)
   };
 
   // Keep settings open if a settings sub-page is active
@@ -25,6 +27,10 @@ function Sidebar() {
     if (isSettingsActive) {
       setIsSettingsOpen(true);
     }
+    // Optional: Close if navigating away from settings entirely
+    // else {
+    //   setIsSettingsOpen(false);
+    // }
   }, [isSettingsActive]);
 
   return (
@@ -69,7 +75,13 @@ function Sidebar() {
               <ul className="submenu">
                 <li>
                   <NavLink to="/settings/employees" className={({ isActive }) => isActive ? "active" : ""}>
-                    Employee Management
+                    <FaUserCog /> Employee Management {/* Added icon */}
+                  </NavLink>
+                </li>
+                {/* Add Groups sub-item */}
+                <li>
+                  <NavLink to="/settings/groups" className={({ isActive }) => isActive ? "active" : ""}>
+                     <FaLayerGroup /> Groups {/* Added icon */}
                   </NavLink>
                 </li>
                 {/* Add other settings sub-items here later */}
