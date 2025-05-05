@@ -9,7 +9,7 @@ from extensions import db
 def seed_database():
     """Seeds the database with initial data if it's empty."""
     # Import models inside the function to ensure app context is active
-    from models import Project, Assessment, Employee
+    from models import Project, Assessment, Employee, Group # Added Group
     # Import PMI phases from routes (or define centrally)
     from api.project_routes import PMI_PHASES
 
@@ -60,6 +60,17 @@ def seed_database():
     else:
          print("Project data already exists, skipping seeding.")
 
+    # Check and seed groups (optional initial groups)
+    if not Group.query.first():
+        print("Seeding initial group data...")
+        group1 = Group(name="Management Team", description="Senior leadership group")
+        group2 = Group(name="Pilot Users - HR", description="HR users for pilot testing")
+        db.session.add_all([group1, group2])
+        db.session.commit()
+        print("Group seeding complete.")
+    else:
+        print("Group data already exists, skipping seeding.")
+
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
 
@@ -82,11 +93,13 @@ def create_app():
     # Import blueprints AFTER db is initialized
     from api.project_routes import project_bp
     from api.assessment_routes import assessment_bp
-    from api.employee_routes import employee_bp # Import employee blueprint
+    from api.employee_routes import employee_bp
+    from api.group_routes import group_bp # Import group blueprint
 
     app.register_blueprint(project_bp)
     app.register_blueprint(assessment_bp)
-    app.register_blueprint(employee_bp) # Register employee blueprint
+    app.register_blueprint(employee_bp)
+    app.register_blueprint(group_bp) # Register group blueprint
 
     # Create database tables and seed data within app context
     with app.app_context():

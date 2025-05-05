@@ -1,0 +1,357 @@
+/* /home/ubuntu/melyn_cm_platform/frontend/src/pages/GroupManagement.css */
+
+.group-management-container {
+    padding: 2rem;
+    font-family: 'Open Sans', sans-serif; /* Use Open Sans for text */
+}
+
+.group-management-container h1 {
+    font-family: 'Poppins', sans-serif; /* Use Poppins for headings */
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.add-button {
+    background-color: #4CAF50; /* Example Green - Adjust to BrightFold brand */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.add-button:hover {
+    background-color: #45a049; /* Darker Green */
+}
+
+.groups-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 8px; /* Rounded corners for table */
+    overflow: hidden; /* Ensures border-radius clips content */
+}
+
+.groups-list th,
+.groups-list td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.groups-list th {
+    background-color: #f4f4f4; /* Light grey header */
+    font-weight: 600; /* Slightly bolder header text */
+    font-family: 'Poppins', sans-serif;
+}
+
+.groups-list tr:last-child td {
+    border-bottom: none;
+}
+
+.groups-list tr:hover {
+    background-color: #f9f9f9; /* Slight hover effect */
+}
+
+.action-buttons button {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 1.1rem;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.action-buttons button:hover {
+    color: #007bff; /* Example Blue - Adjust to BrightFold brand */
+}
+
+.action-buttons button:last-child {
+    margin-right: 0;
+}
+
+.action-buttons button[title="Delete Group"]:hover {
+    color: #dc3545; /* Example Red - Adjust to BrightFold brand */
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px; /* Limit max width */
+}
+
+.modal-content h2 {
+    font-family: 'Poppins', sans-serif;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.modal-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cancel-button {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.cancel-button:hover {
+    background-color: #e0e0e0;
+}
+
+.save-button {
+    background-color: #007bff; /* Example Blue - Adjust */
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #0056b3;
+}
+
+.delete-button {
+    background-color: #dc3545; /* Example Red - Adjust */
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+.modal-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #dc3545; /* Red for errors */
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Placeholder for Manage Members Modal specific styles */
+.manage-members-modal {
+    max-width: 700px; /* Wider modal for member management */
+}
+
+
+
+/* --- Manage Members Modal Styles --- */
+
+.manage-members-modal {
+    max-width: 800px; /* Wider modal for two columns */
+}
+
+.member-management-layout {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.member-section {
+    flex: 1; /* Each section takes half the space */
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 1rem;
+    background-color: #fdfdfd;
+}
+
+.member-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: #444;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Search Input Styles */
+.search-input-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 10px 8px 35px; /* Add padding for icon */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Member Lists Styles */
+.member-list,
+.employee-list-to-add {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px; /* Limit height and make scrollable */
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.member-list li,
+.employee-list-to-add li {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.member-list li:last-child,
+.employee-list-to-add li:last-child {
+    border-bottom: none;
+}
+
+.member-list li span {
+    flex-grow: 1;
+    margin-right: 10px;
+    font-size: 0.9rem;
+}
+
+.employee-list-to-add li label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.employee-list-to-add li input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.employee-list-to-add li small {
+    color: #777;
+    margin-left: 5px;
+}
+
+/* Remove Member Button */
+.remove-member-button {
+    background: none;
+    border: none;
+    color: #dc3545; /* Red color */
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.remove-member-button:hover {
+    color: #a71d2a; /* Darker red */
+}
+
+.remove-member-button:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+/* Add Members Button */
+.add-members-button {
+    margin-top: 1rem;
+    background-color: #28a745; /* Green color - Adjust to BrightFold */
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.add-members-button:hover {
+    background-color: #218838; /* Darker green */
+}
+
+.add-members-button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+/* Scrollable List Utility */
+.scrollable-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
