@@ -73,16 +73,31 @@ function GroupManagement() {
     }, []);
 
     const fetchEmployees = useCallback(async () => {
+        // Added console log for debugging start
+        console.log("Fetching employees from:", `${API_BASE_URL}/api/employees/`); 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/employees`);
+            // Added trailing slash to the endpoint
+            const response = await fetch(`${API_BASE_URL}/api/employees/`); 
             if (!response.ok) {
+                // Log the full response for debugging non-ok status
+                console.error("Fetch employees response not OK:", response);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            setEmployees(data);
+            // Log the received data for debugging
+            console.log("Received employee data:", data);
+            // Ensure data is an array before setting state
+            if (Array.isArray(data)) {
+                setEmployees(data);
+                setError(null); // Clear previous errors on success
+            } else {
+                console.error("Received employee data is not an array:", data);
+                throw new Error("Invalid data format received from server.");
+            }
         } catch (e) {
+            // Log the actual error object for better debugging
             console.error("Failed to fetch employees:", e);
-            setError('Failed to load employees for member management.');
+            setError("Failed to load employees for member management.");
         }
     }, []);
 
