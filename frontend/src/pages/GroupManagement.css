@@ -390,3 +390,28 @@
     font-size: 0.85rem; /* Adjust email font size */
 }
 
+
+
+/* Styles for enhanced employee display in member management */
+.employee-details {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px; /* Space between checkbox and text */
+    flex-grow: 1;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.employee-name small {
+    font-weight: 400; /* Make email less prominent */
+}
+
+.employee-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 2px;
+}
+

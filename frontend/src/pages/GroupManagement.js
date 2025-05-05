@@ -459,7 +459,10 @@ function GroupManagement() {
                                                             checked={selectedEmployeesToAdd.has(emp.id)}
                                                             onChange={() => handleEmployeeSelectionChange(emp.id)}
                                                         />
-                                                        {emp.name} <small>({emp.email})</small>
+                                                        <div className="employee-details">
+                                                            <span className="employee-name">{emp.name} <small>({emp.email})</small></span>
+                                                            <span className="employee-meta">{emp.job_position || "No Position"} - {emp.department || "No Department"}</span>
+                                                        </div>
                                                     </label>
                                                 </li>
                                             ))
