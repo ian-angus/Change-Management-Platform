@@ -3,8 +3,21 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './GroupManagement.css';
 import { FaEdit, FaTrashAlt, FaUsersCog, FaPlus, FaSearch, FaTimes } from 'react-icons/fa'; // Added FaSearch, FaTimes
 
-// Base URL for the API
-const API_BASE_URL = 'http://localhost:5001'; // Adjust if your backend runs elsewhere
+// Dynamically determine API base URL based on frontend hostname
+const getApiBaseUrl = () => {
+    const hostname = window.location.hostname;
+    // Assuming manus.computer structure: <port>-<hash>-<domain>
+    if (hostname.includes("manus.computer")) {
+        const parts = hostname.split("-");
+        // Replace the port part (e.g., 3000) with the backend port (5001)
+        parts[0] = "5001";
+        return `https://${parts.join("-")}`;
+    } else {
+        // Fallback for local development (if needed, adjust as necessary)
+        return "http://localhost:5001";
+    }
+};
+const API_BASE_URL = getApiBaseUrl();
 
 // --- Helper Components ---
 
