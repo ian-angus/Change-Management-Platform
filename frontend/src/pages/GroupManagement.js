@@ -125,7 +125,8 @@ function GroupManagement() {
 
     const handleOpenManageMembersModal = (group) => {
         setSelectedEmployeesToAdd(new Set()); // Reset selections
-        setMemberSearchTerm(''); // Reset search
+        setMemberSearchTerm(""); // Reset search
+        fetchEmployees(); // Ensure employees are fetched/refreshed when modal opens
         fetchGroupDetails(group.id); // Fetch full details including members
         setShowManageMembersModal(true);
     };
