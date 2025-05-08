@@ -1,0 +1,132 @@
+/* EmployeeFormModal.css */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+.modal-content {
+    background-color: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 500px; /* Adjust as needed */
+    font-family: 'Open Sans', sans-serif;
+}
+
+.modal-content h3 {
+    font-family: 'Poppins', sans-serif;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #555;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9em;
+}
+
+.form-group label .required {
+    color: #dc3545; /* BrightFold Red - Placeholder */
+    margin-left: 2px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for width 100% */
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.95em;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #007bff; /* BrightFold Blue - Placeholder */
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Blue focus ring */
+}
+
+.error-text {
+    color: #dc3545; /* BrightFold Red - Placeholder */
+    font-size: 0.85em;
+    display: block;
+    margin-top: 4px;
+}
+
+.submit-error {
+    text-align: center;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+}
+
+.form-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.form-actions button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 0.95em;
+    transition: background-color 0.2s ease;
+}
+
+.btn-save {
+    background-color: #28a745; /* BrightFold Green - Placeholder */
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #218838;
+}
+
+.btn-save:disabled {
+    background-color: #a3d8b0;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    background-color: #6c757d; /* Grey */
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-cancel:disabled {
+    background-color: #b0b6bb;
+    cursor: not-allowed;
+}
+
