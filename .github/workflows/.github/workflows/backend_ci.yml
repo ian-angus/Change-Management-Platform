@@ -34,7 +34,7 @@ jobs:
       run: |
         python -m venv env
         source env/bin/activate
-        pip install -r requirements.txt
+        pip install -r backend/requirements.txt
       working-directory: ${{ env.WORKING_DIRECTORY }} # Run this step in the backend directory
 
     # Optional: Add a step for running backend tests here if you have them
