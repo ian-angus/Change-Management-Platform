@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Use axios for consistency
-import { FaPlus, FaTimes, FaPaperPlane } from 'react-icons/fa'; // Import icons
+import apiClient from '../apiClient'; // Import the new apiClient
+import { FaPlus, FaTimes, FaPaperPlane } from 'react-icons/fa';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -10,10 +10,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Radar } from 'react-chartjs-2'; // Import Radar chart
-import './Assessments.css'; // Assuming you have or will create this CSS file
+import { Radar } from 'react-chartjs-2';
+import './Assessments.css';
 
-// Register Chart.js components
 ChartJS.register(
   RadialLinearScale,
   PointElement,
@@ -23,10 +22,6 @@ ChartJS.register(
   Legend
 );
 
-// Use relative path for API calls, relying on proxy in development
-const API_BASE_URL = '/api';
-
-// --- Dummy Assessment Templates (Replace with API call later) ---
 const DUMMY_ASSESSMENT_TEMPLATES = [
   { id: 'change_characteristics', name: 'Change Characteristics', description: 'Assess the scope, scale, and impact of the change.' },
   { id: 'organizational_attributes', name: 'Organizational Attributes', description: "Evaluate the organization's culture, structure, and history with change." },
@@ -34,9 +29,7 @@ const DUMMY_ASSESSMENT_TEMPLATES = [
   { id: 'adkar', name: 'ADKAR Assessment (Initial)', description: 'Assess individual readiness across Awareness, Desire, Knowledge, Ability, and Reinforcement.' },
   { id: 'sponsor_assessment', name: 'Sponsor Assessment', description: 'Evaluate the effectiveness and engagement of the primary sponsor.' },
 ];
-// ----------------------------------------------------------------
 
-// Helper function to prepare ADKAR data for Radar chart
 const prepareAdkarChartData = (assessment) => {
   if (!assessment || assessment.assessment_type !== 'ADKAR Assessment (Initial)' || !assessment.results) {
     return null;
@@ -49,8 +42,8 @@ const prepareAdkarChartData = (assessment) => {
       {
         label: 'ADKAR Score',
         data: dataPoints,
-        backgroundColor: 'rgba(0, 123, 255, 0.2)', // BrightFold Primary Blue with transparency
-        borderColor: 'rgba(0, 123, 255, 1)', // BrightFold Primary Blue
+        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+        borderColor: 'rgba(0, 123, 255, 1)',
         borderWidth: 1,
         pointBackgroundColor: 'rgba(0, 123, 255, 1)',
       },
@@ -58,7 +51,6 @@ const prepareAdkarChartData = (assessment) => {
   };
 };
 
-// Chart options for Radar chart
 const radarChartOptions = {
   scales: {
     r: {
@@ -94,29 +86,26 @@ function Assessments() {
   const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
-  // State for Add Assessment Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [assessmentTemplates] = useState(DUMMY_ASSESSMENT_TEMPLATES);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [addAssessmentError, setAddAssessmentError] = useState(null);
 
-  // Fetch projects for the dropdown
   useEffect(() => {
     setLoadingProjects(true);
-    axios.get(`${API_BASE_URL}/projects/`)
+    apiClient.get('/projects/') // Use apiClient, remove /api
       .then(response => {
         setProjects(response.data);
         setLoadingProjects(false);
       })
       .catch(error => {
         console.error('Error fetching projects:', error);
-        setError('Failed to load projects. Cannot select assessments.');
+        const errorMsg = error.response?.data?.error || error.message || "An unknown error occurred";
+        setError(`Failed to load projects: ${errorMsg}. Cannot select assessments.`);
         setLoadingProjects(false);
       });
   }, []);
 
-  // Function to fetch assessments for the selected project
   const fetchAssessments = (projectId) => {
     if (!projectId) {
       setAssessments([]);
@@ -125,19 +114,19 @@ function Assessments() {
     }
     setLoadingAssessments(true);
     setError(null);
-    axios.get(`${API_BASE_URL}/assessments?project_id=${projectId}`)
+    apiClient.get(`/assessments?project_id=${projectId}`) // Use apiClient, remove /api
       .then(response => {
         setAssessments(response.data);
         setLoadingAssessments(false);
       })
       .catch(error => {
         console.error('Error fetching assessments:', error);
-        setError('Failed to load assessments. Is the backend running?');
+        const errorMsg = error.response?.data?.error || error.message || "An unknown error occurred";
+        setError(`Failed to load assessments: ${errorMsg}. Is the backend running?`);
         setLoadingAssessments(false);
       });
   };
 
-  // Fetch assessments when selectedProjectId changes
   useEffect(() => {
     fetchAssessments(selectedProjectId);
   }, [selectedProjectId]);
@@ -148,9 +137,7 @@ function Assessments() {
 
   const selectedProject = projects.find(p => p.id === parseInt(selectedProjectId));
 
-  // --- Add Assessment Modal Functions ---
   const openAddModal = () => {
-    console.log("Opening Add Assessment Modal..."); // Debug log
     setSelectedTemplateId('');
     setAddAssessmentError(null);
     setSuccessMessage(null);
@@ -158,7 +145,6 @@ function Assessments() {
   };
 
   const closeAddModal = () => {
-    console.log("Closing Add Assessment Modal..."); // Debug log
     setIsAddModalOpen(false);
   };
 
@@ -181,60 +167,45 @@ function Assessments() {
       project_id: parseInt(selectedProjectId),
       assessment_type: selectedTemplate.name
     };
-    // Make API call to backend
-    axios.post(`${API_BASE_URL}/assessments/`, newAssessmentData)
+    apiClient.post('/assessments/', newAssessmentData) // Use apiClient, remove /api
       .then(response => {
         setSuccessMessage(response.data.message || 'Assessment added successfully!');
-        fetchAssessments(selectedProjectId); // Refresh list
+        fetchAssessments(selectedProjectId);
         closeAddModal();
         setTimeout(() => setSuccessMessage(null), 3000);
       })
       .catch(err => {
         console.error('Error adding assessment:', err);
-        const errorMsg = err.response?.data?.error || 'Failed to add assessment. Please try again.';
+        const errorMsg = err.response?.data?.error || err.message || 'Failed to add assessment. Please try again.';
         setAddAssessmentError(errorMsg);
       });
   };
-  // -------------------------------------
 
-  // --- Deploy Assessment Functionality ---
   const handleDeployAssessment = (assessmentId, assessmentType) => {
-    if (window.confirm(`Are you sure you want to deploy the \"${assessmentType}\" assessment (ID: ${assessmentId})?`)) {
-        setError(null); // Clear previous errors
-        setSuccessMessage(null); // Clear previous success messages
-        
-        // Make API call to backend endpoint for deployment
-        axios.post(`${API_BASE_URL}/assessments/${assessmentId}/deploy`, {})
+    if (window.confirm(`Are you sure you want to deploy the "${assessmentType}" assessment (ID: ${assessmentId})?`)) {
+        setError(null);
+        setSuccessMessage(null);
+        apiClient.post(`/assessments/${assessmentId}/deploy`, {}) // Use apiClient, remove /api
           .then(response => {
             setSuccessMessage(response.data.message || `Assessment ${assessmentId} deployed successfully.`);
-            fetchAssessments(selectedProjectId); // Refresh data from backend
+            fetchAssessments(selectedProjectId);
             setTimeout(() => setSuccessMessage(null), 3000);
           })
           .catch(err => {
             console.error(`Error deploying assessment ${assessmentId}:`, err);
-            setError(err.response?.data?.error || 'Failed to deploy assessment.');
-            // Optionally clear error after some time
+            const errorMsg = err.response?.data?.error || err.message || 'Failed to deploy assessment.';
+            setError(errorMsg);
             setTimeout(() => setError(null), 5000);
           });
     }
   };
-  // -----------------------------------------------------
 
-  // Find the ADKAR assessment for charting
   const adkarAssessment = assessments.find(a => a.assessment_type === 'ADKAR Assessment (Initial)');
   const adkarChartData = prepareAdkarChartData(adkarAssessment);
 
   return (
     <div className="assessments-page page-content">
       <h1 className="page-title">Assessments</h1>
-
-      {/* --- DEBUGGING: Show modal state --- */}
-      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'yellow', padding: '5px', zIndex: 2000 }}>
-        Modal Open State: {isAddModalOpen ? 'TRUE' : 'FALSE'}
-      </div>
-      {/* --- END DEBUGGING --- */}
-
-      {/* Project Selection Area */} 
       <div className="project-selection-area card">
         <div className="form-group">
           <label htmlFor="project-select">Select Project:</label>
@@ -261,12 +232,8 @@ function Assessments() {
             <p className="info-message">No projects available. Please create a project first.</p>
         )}
       </div>
-
-      {/* Display general success/error messages */} 
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
-
-      {/* Display content only after a project is selected */} 
       {selectedProjectId ? (
         <div className="assessments-content">
           <div className="toolbar">
@@ -279,19 +246,14 @@ function Assessments() {
                 <FaPlus /> Add Assessment
              </button> 
           </div>
-
           {loadingAssessments && <p>Loading assessments...</p>}
-
           {!loadingAssessments && !error && assessments.length === 0 && (
             <div className="card info-message">
               <p>No assessments found for this project. Click "+ Add Assessment" to get started.</p>
             </div>
           )}
-
-          {/* Assessment Table and Chart Side-by-Side */} 
           {!loadingAssessments && !error && assessments.length > 0 && (
             <div className="assessment-display-grid">
-              {/* Assessment Table */} 
               <div className="card assessment-table-container">
                 <table className="assessments-table">
                   <thead>
@@ -337,8 +299,6 @@ function Assessments() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Chart Visualization */} 
               {adkarChartData && (
                 <div className="card chart-container">
                   <h3>ADKAR Assessment Results</h3>
@@ -357,8 +317,6 @@ function Assessments() {
             </div>
          )
       )}
-
-      {/* Add Assessment Modal */} 
       {isAddModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -396,7 +354,6 @@ function Assessments() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

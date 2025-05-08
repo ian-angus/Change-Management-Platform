@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
 import './Projects.css';
+import apiClient from '../apiClient'; // Import the new apiClient
 
 // Define PMI Phases (match backend)
 const PMI_PHASES = ["Initiating", "Planning", "Executing", "Monitoring & Controlling", "Closing"];
@@ -17,7 +18,7 @@ function Projects() {
     start_date: '',
     end_date: '',
     status: 'Draft',
-    project_phase: 'Initiating', // Added project_phase with default
+    project_phase: 'Initiating',
   });
 
   // Fetch projects
@@ -25,23 +26,14 @@ function Projects() {
     setIsLoading(true);
     setError(null);
     try {
-      const projectsResponse = await fetch('/api/projects/');
-      if (!projectsResponse.ok) {
-        // Try to get error message from backend response
-        let errorMsg = `HTTP error! status: ${projectsResponse.status} fetching projects`;
-        try {
-            const errorData = await projectsResponse.json();
-            errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) {
-            // Ignore if response is not JSON
-        }
-        throw new Error(errorMsg);
-      }
-      const projectsData = await projectsResponse.json();
-      setProjects(projectsData);
+      // Use apiClient and remove /api prefix from URL
+      const projectsResponse = await apiClient.get('/projects/'); 
+      // Axios directly gives data or throws an error for non-2xx responses
+      setProjects(projectsResponse.data);
     } catch (e) {
       console.error("Failed to load projects:", e);
-      setError(`Failed to load projects: ${e.message}. Is the backend running and seeded?`);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setError(`Failed to load projects: ${errorMsg}. Is the backend running and seeded?`);
     } finally {
       setIsLoading(false);
     }
@@ -51,13 +43,11 @@ function Projects() {
     fetchProjects();
   }, []);
 
-  // Handle input changes in the form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Reset form and close modal
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProject(null);
@@ -67,11 +57,10 @@ function Projects() {
       start_date: '',
       end_date: '',
       status: 'Draft',
-      project_phase: 'Initiating', // Reset phase
+      project_phase: 'Initiating',
     });
   };
 
-  // Open modal for creating a new project
   const openCreateModal = () => {
     setEditingProject(null);
     setFormData({
@@ -80,12 +69,11 @@ function Projects() {
       start_date: '',
       end_date: '',
       status: 'Draft',
-      project_phase: 'Initiating', // Default phase for new project
+      project_phase: 'Initiating',
     });
     setIsModalOpen(true);
   };
 
-  // Open modal for editing an existing project
   const openEditModal = (project) => {
     setEditingProject(project);
     setFormData({
@@ -94,16 +82,16 @@ function Projects() {
       start_date: project.start_date ? project.start_date.split('T')[0] : '',
       end_date: project.end_date ? project.end_date.split('T')[0] : '',
       status: project.status || 'Draft',
-      project_phase: project.project_phase || 'Initiating', // Set phase from project data
+      project_phase: project.project_phase || 'Initiating',
     });
     setIsModalOpen(true);
   };
 
-  // Handle form submission (Create or Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects/';
-    const method = editingProject ? 'PUT' : 'POST';
+    // Adjust URL for apiClient (remove /api prefix)
+    const url = editingProject ? `/projects/${editingProject.id}` : '/projects/';
+    const method = editingProject ? 'put' : 'post'; // Axios methods are lowercase
 
     const payload = {
         ...formData,
@@ -111,47 +99,33 @@ function Projects() {
         end_date: formData.end_date || null,
     };
 
-    // Basic validation (phase added)
     if (!payload.name || !payload.status || !payload.project_phase) {
         setError('Project Name, Status, and Phase are required.');
         return;
     }
 
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
+      // Use apiClient with dynamic method
+      await apiClient[method](url, payload);
       closeModal();
-      fetchProjects(); // Refresh data
+      fetchProjects();
     } catch (e) {
       console.error(`Failed to ${editingProject ? 'update' : 'create'} project:`, e);
-      setError(`Failed to ${editingProject ? 'update' : 'create'} project: ${e.message}`);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setError(`Failed to ${editingProject ? 'update' : 'create'} project: ${errorMsg}`);
     }
   };
 
-  // Handle project deletion
   const handleDeleteProject = async (projectId) => {
     if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
       try {
-        const response = await fetch(`/api/projects/${projectId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-           const errorData = await response.json();
-           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-        fetchProjects(); // Refresh the project list
+        // Use apiClient and adjust URL
+        await apiClient.delete(`/projects/${projectId}`);
+        fetchProjects();
       } catch (e) {
         console.error("Failed to delete project:", e);
-        setError(`Failed to delete project: ${e.message}`);
+        const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+        setError(`Failed to delete project: ${errorMsg}`);
       }
     }
   };
@@ -176,7 +150,7 @@ function Projects() {
               <tr>
                 <th>Name</th>
                 <th>Status</th>
-                <th>Phase</th> {/* Added Phase column */}
+                <th>Phase</th>
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Stakeholders</th>
@@ -190,7 +164,7 @@ function Projects() {
                   <tr key={project.id}>
                     <td>{project.name}</td>
                     <td><span className={`status-badge status-${project.status?.toLowerCase()}`}>{project.status}</span></td>
-                    <td>{project.project_phase || 'N/A'}</td> {/* Display phase */}
+                    <td>{project.project_phase || 'N/A'}</td>
                     <td>{project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{project.end_date ? new Date(project.end_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{project.stakeholders?.length || 0}</td>
@@ -207,7 +181,6 @@ function Projects() {
                 ))
               ) : (
                 <tr>
-                  {/* Adjusted colspan */}
                   <td colSpan="8">No projects found. Use the '+ New Project' button to create one.</td>
                 </tr>
               )}
@@ -216,7 +189,6 @@ function Projects() {
         </div>
       )}
 
-      {/* Create/Edit Project Modal */}
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -247,7 +219,6 @@ function Projects() {
                   <option value="Completed">Completed</option>
                 </select>
               </div>
-              {/* Added Project Phase dropdown */}
               <div className="form-group">
                 <label htmlFor="project_phase">Project Phase *</label>
                 <select id="project_phase" name="project_phase" value={formData.project_phase} onChange={handleInputChange} required>

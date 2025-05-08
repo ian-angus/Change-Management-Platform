@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import apiClient from '../apiClient'; // Import the new apiClient
 import './EmployeeManagement.css';
 
 // Reusable Modal Component (as defined previously)
@@ -38,34 +39,22 @@ function EmployeeManagement() {
   const [uploadStatus, setUploadStatus] = useState(''); // For bulk upload feedback
   const fileInputRef = useRef(null); // Ref for file input
 
-  // Use relative path with TRAILING SLASH for API calls
-  const apiBaseUrl = '/api/employees/'; // Ensure trailing slash
-
   // Fetch Employees Function
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(apiBaseUrl);
-      if (!response.ok) {
-        let errorMsg = `HTTP error! status: ${response.status} fetching employees`;
-        try {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) {
-            // Ignore if response is not JSON
-        }
-        throw new Error(errorMsg);
-      }
-      const data = await response.json();
-      setEmployees(data);
+      // Use apiClient and remove /api prefix from URL, ensure endpoint is correct
+      const response = await apiClient.get('/employees/'); 
+      setEmployees(response.data);
     } catch (e) {
       console.error("Failed to load employees:", e);
-      setError(e.message);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl]);
+  }, []);
 
   useEffect(() => {
     fetchEmployees();
@@ -107,31 +96,19 @@ function EmployeeManagement() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
-    const url = currentEmployee ? `${apiBaseUrl}${currentEmployee.id}` : apiBaseUrl;
-    const method = currentEmployee ? 'PUT' : 'POST';
+    // Adjust URL for apiClient (remove /api prefix)
+    const url = currentEmployee ? `/employees/${currentEmployee.id}` : '/employees/';
+    const method = currentEmployee ? 'put' : 'post'; // Axios methods are lowercase
 
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        let errorMsg = `HTTP error! status: ${response.status}`;
-        try {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) { /* Ignore */ }
-        throw new Error(errorMsg);
-      }
+      // Use apiClient with dynamic method
+      await apiClient[method](url, formData);
       closeModal();
       fetchEmployees();
     } catch (e) {
       console.error(`Failed to ${currentEmployee ? 'update' : 'create'} employee:`, e);
-      setApiError(e.message);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setApiError(errorMsg);
     }
   };
 
@@ -142,21 +119,13 @@ function EmployeeManagement() {
     }
     setError(null);
     try {
-      const response = await fetch(`${apiBaseUrl}${employeeId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        let errorMsg = `HTTP error! status: ${response.status}`;
-        try {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-        } catch (jsonError) { /* Ignore */ }
-        throw new Error(errorMsg);
-      }
+      // Use apiClient and adjust URL
+      await apiClient.delete(`/employees/${employeeId}`);
       fetchEmployees();
     } catch (e) {
       console.error(`Failed to delete employee ${employeeId}:`, e);
-      setError(`Failed to delete employee: ${e.message}`);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setError(`Failed to delete employee: ${errorMsg}`);
     }
   };
 
@@ -175,14 +144,13 @@ function EmployeeManagement() {
     uploadFormData.append('file', file);
 
     try {
-      const response = await fetch(`${apiBaseUrl}upload`, {
-        method: 'POST',
-        body: uploadFormData,
+      // Use apiClient and adjust URL
+      const response = await apiClient.post('/employees/upload', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP error! status: ${response.status}`);
-      }
+      const result = response.data; // Axios provides data directly
       setUploadStatus(`Upload successful! Added: ${result.processed_count}, Skipped/Errors: ${result.skipped_count}. Check console for details.`);
       if (result.errors && result.errors.length > 0) {
         console.warn("Bulk Upload Errors:", result.errors);
@@ -190,7 +158,8 @@ function EmployeeManagement() {
       fetchEmployees();
     } catch (e) {
       console.error("Bulk upload failed:", e);
-      setUploadStatus(`Upload failed: ${e.message}`);
+      const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
+      setUploadStatus(`Upload failed: ${errorMsg}`);
     } finally {
       event.target.value = null;
     }
@@ -216,10 +185,8 @@ function EmployeeManagement() {
       {loading && <p>Loading employees...</p>}
       {error && !loading && <p className="error-message" style={{ border: '1px solid red', padding: '10px', backgroundColor: '#ffecec' }}>Error loading employee data: {error}</p>}
 
-      {/* Table structure for fixed header */}
       {!loading && (
         <div className="table-wrapper">
-          {/* Header Table */}
           <table className="table-header">
             <thead>
               <tr>
@@ -231,7 +198,6 @@ function EmployeeManagement() {
               </tr>
             </thead>
           </table>
-          {/* Scrollable Body Table */}
           <div className="table-body-scroll">
             <table className="table-body">
               <tbody>
@@ -250,7 +216,6 @@ function EmployeeManagement() {
                   ))
                 ) : (
                   <tr>
-                    {/* Use a single cell spanning all columns for the message */}
                     <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
                       {error ? 'Could not load data.' : 'No employees found. Use \'+ Add Employee\' or \'Upload List\' to start.'}
                     </td>
@@ -262,7 +227,6 @@ function EmployeeManagement() {
         </div>
       )}
 
-      {/* Modal remains the same */}
       <Modal show={isModalOpen} onClose={closeModal} title={currentEmployee ? 'Edit Employee' : 'Add New Employee'}>
         <form onSubmit={handleFormSubmit}>
           {apiError && <p className="error-message" style={{ marginBottom: '15px' }}>Error: {apiError}</p>}
