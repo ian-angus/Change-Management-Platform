@@ -1,0 +1,56 @@
+name: Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches:
+      - main # Or your primary development branch
+    paths:
+      - 'backend/**' # Only run if changes are in the backend folder
+  pull_request:
+    branches:
+      - main # Or your primary development branch
+    paths:
+      - 'backend/**'
+
+jobs:
+  build-and-deploy-backend:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: '3.11'
+      # IMPORTANT: Replace 'your-backend-app-name' with the actual name of your Azure App Service for the backend
+      APP_NAME: 'changemanagement-backend'
+      WORKING_DIRECTORY: './backend' # Set the working directory to the backend folder
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m venv env
+        source env/bin/activate
+        pip install -r ${{ env.WORKING_DIRECTORY }}/requirements.txt
+      working-directory: ${{ env.WORKING_DIRECTORY }} # Run this step in the backend directory
+
+    # Optional: Add a step for running backend tests here if you have them
+    # - name: Run Backend Tests
+    #   run: |
+    #     source env/bin/activate
+    #     pytest tests # Assuming tests are in backend/tests
+    #   working-directory: ${{ env.WORKING_DIRECTORY }}
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.APP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_BACKEND }}
+        package: ${{ env.WORKING_DIRECTORY }} # Deploy the backend folder
+        # Ensure your App Service is configured to run your Flask app, e.g., using Gunicorn.
+        # You might need a startup command in App Service configuration or a web.config if not using Gunicorn by default.
+        # Example startup command for App Service (set in Azure Portal -> App Service -> Configuration -> General settings -> Startup Command):
+        # gunicorn --bind=0.0.0.0 --timeout 600 app:app  (assuming your Flask app instance is named 'app' in 'app.py' inside the backend folder)
