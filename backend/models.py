@@ -1,129 +1,119 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship
-import datetime
+# Import the shared db instance from extensions
+from extensions import db
+from datetime import datetime
 
-db = SQLAlchemy()
-
-# Association table for the many-to-many relationship between Project and Employee
-project_employee_association = db.Table(
-    "project_employee",
+# Association table for Project Stakeholders (Many-to-Many)
+project_stakeholders = db.Table("project_stakeholders",
     db.Column("project_id", db.Integer, db.ForeignKey("project.id"), primary_key=True),
-    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True),
+    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
 )
 
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    start_date = db.Column(db.DateTime, nullable=True, default=datetime.datetime.utcnow)
-    end_date = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
-    # Relationships
-    employees = relationship(
-        "Employee",
-        secondary=project_employee_association,
-        back_populates="projects",
-        lazy="dynamic"
-    )
-    assessments = relationship("Assessment", back_populates="project", lazy="dynamic")
-    stakeholder_groups = relationship("StakeholderGroup", back_populates="project", lazy="dynamic")
-
-    def __repr__(self):
-        return f"<Project {self.name}>"
-
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
-    description = db.Column(db.String(200))
-
-    # Relationships
-    employees = relationship("Employee", back_populates="role", lazy="dynamic")
-
-    def __repr__(self):
-        return f"<Role {self.name}>"
+# Association table for Group Members (Many-to-Many)
+group_members = db.Table("group_members",
+    db.Column("group_id", db.Integer, db.ForeignKey("group.id"), primary_key=True),
+    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
+)
 
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=True) # Nullable if role is optional
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    job_position = db.Column(db.String(80), nullable=True)
+    department = db.Column(db.String(80), nullable=True)
 
-    # Relationships
-    role = relationship("Role", back_populates="employees")
-    projects = relationship(
-        "Project",
-        secondary=project_employee_association,
-        back_populates="employees",
-        lazy="dynamic"
-    )
-    assessment_results = relationship("AssessmentResult", back_populates="employee", lazy="dynamic")
+    # Relationship back to projects where this employee is a stakeholder
+    stakeholder_in_projects = db.relationship("Project", secondary=project_stakeholders,
+                                              lazy="subquery",
+                                              backref=db.backref("stakeholders", lazy=True))
 
-    def __repr__(self):
-        return f"<Employee {self.name}>"
+    # Relationship back to groups this employee belongs to
+    member_of_groups = db.relationship("Group", secondary=group_members,
+                                       lazy="subquery",
+                                       backref=db.backref("members", lazy=True))
 
-class AssessmentTemplate(db.Model):
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "job_position": self.job_position,
+            "department": self.department
+        }
+
+class Group(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # members relationship defined via backref from Employee
+
+    def to_dict(self, include_members=False):
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "creation_date": self.creation_date.isoformat() if self.creation_date else None,
+            "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
+            "member_count": len(self.members)
+        }
+        if include_members:
+            data["members"] = [member.to_dict() for member in self.members]
+        return data
+
+class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    questions = db.Column(db.JSON, nullable=True) # Storing questions as JSON
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    start_date = db.Column(db.DateTime, nullable=True)
+    end_date = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(50), nullable=False, default="Draft")
+    project_phase = db.Column(db.String(50), nullable=True, default="Initiating")
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    assessments = relationship("Assessment", back_populates="template", lazy="dynamic")
+    assessments = db.relationship("Assessment", backref="project", lazy=True, cascade="all, delete-orphan")
+    # stakeholders relationship defined via backref from Employee
 
-    def __repr__(self):
-        return f"<AssessmentTemplate {self.name}>"
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
+            "status": self.status,
+            "project_phase": self.project_phase,
+            "creation_date": self.creation_date.isoformat() if self.creation_date else None,
+            "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
+            "stakeholders": [stakeholder.to_dict() for stakeholder in self.stakeholders],
+            "assessment_count": len(self.assessments)
+        }
 
 class Assessment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
-    template_id = db.Column(db.Integer, db.ForeignKey("assessment_template.id"), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(50), nullable=False, default="Not Started") # e.g., Not Started, Deployed, Completed
-    deployment_date = db.Column(db.DateTime, nullable=True)
+    assessment_type = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(50), nullable=False, default="Not Started")
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     completion_date = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    results = db.Column(db.JSON, nullable=True)
+    risk_level = db.Column(db.String(50), nullable=True)
+    readiness_score = db.Column(db.Integer, nullable=True)
 
-    # Relationships
-    project = relationship("Project", back_populates="assessments")
-    template = relationship("AssessmentTemplate", back_populates="assessments")
-    results = relationship("AssessmentResult", back_populates="assessment", lazy="dynamic")
-    # Add relationship for deployed employees if needed (e.g., many-to-many with Employee)
-
-    def __repr__(self):
-        return f"<Assessment {self.name} for Project {self.project_id}>"
-
-class AssessmentResult(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    assessment_id = db.Column(db.Integer, db.ForeignKey("assessment.id"), nullable=False)
-    employee_id = db.Column(db.Integer, db.ForeignKey("employee.id"), nullable=False) # Respondent
-    submission_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    answers = db.Column(db.JSON, nullable=False) # Storing answers as JSON
-
-    # Relationships
-    assessment = relationship("Assessment", back_populates="results")
-    employee = relationship("Employee", back_populates="assessment_results")
-
-    def __repr__(self):
-        return f"<AssessmentResult {self.id} for Assessment {self.assessment_id}>"
-
-class StakeholderGroup(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
-    # Relationships
-    project = relationship("Project", back_populates="stakeholder_groups")
-
-    def __repr__(self):
-        return f"<StakeholderGroup {self.name} for Project {self.project_id}>"
+    def to_dict(self):
+        last_modified = self.completion_date or self.creation_date
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "assessment_type": self.assessment_type,
+            "status": self.status,
+            "creation_date": self.creation_date.isoformat() if self.creation_date else None,
+            "completion_date": self.completion_date.isoformat() if self.completion_date else None,
+            "last_modified": last_modified.isoformat() if last_modified else None,
+            "results": self.results,
+            "risk_level": self.risk_level,
+            "readiness_score": self.readiness_score
+        }
 

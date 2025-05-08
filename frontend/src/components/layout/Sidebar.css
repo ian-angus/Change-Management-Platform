@@ -1,87 +1,103 @@
-/* Sidebar Styles */
+/* Sidebar.css */
+
 .app-sidebar {
-  width: 250px; /* Fixed width */
-  background-color: #1a2a4d; /* Dark Blue background for BrightFold */
-  color: #e1e8f0; /* Lighter text color */
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 80px); /* Full height minus UPDATED header height */
-  position: fixed; /* Fixed position */
-  top: 80px; /* Below UPDATED header */
+  width: 250px;
+  background-color: var(--brightfold-white);
+  padding-top: 20px; /* Add padding to avoid overlap with fixed header */
+  height: calc(100vh - 150px); /* Adjust height based on header height */
+  position: fixed; /* Make sidebar fixed */
+  top: 150px; /* Position below the header */
   left: 0;
-  padding-top: 20px;
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto; /* Allow scrolling if content overflows */
+  transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 90; /* Below header */
 }
 
-.app-sidebar nav {
-  flex-grow: 1;
-}
-
-.app-sidebar ul {
+.app-sidebar nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.app-sidebar li {
-  margin: 0;
-}
-
-.app-sidebar a,
-.app-sidebar button {
-  display: block;
-  padding: 12px 20px;
-  color: #e1e8f0; /* Lighter text color */
+.app-sidebar nav li a {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: var(--brightfold-charcoal);
   text-decoration: none;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 1em;
-  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-left 0.2s ease;
+  border-left: 5px solid transparent;
+  position: relative; /* Needed for submenu toggle icon positioning */
 }
 
-.app-sidebar a:hover,
-.app-sidebar button:hover {
-  background-color: #2a3f6d; /* Slightly lighter blue on hover */
-  color: #ffffff;
+.app-sidebar nav li a svg {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
 }
 
-.app-sidebar .active-link {
-  background-color: #007bff; /* Bright Blue for active link (as requested) */
-  color: #ffffff;
+.app-sidebar nav li a:hover {
+  background-color: var(--brightfold-light-gray);
+  color: var(--brightfold-blue);
+}
+
+.app-sidebar nav li a.active {
+  background-color: var(--brightfold-blue); /* Use primary blue for active background */
+  color: var(--brightfold-white);
+  border-left: 5px solid var(--brightfold-orange); /* Use secondary orange for active border */
   font-weight: bold;
 }
 
-.sidebar-footer {
-  margin-top: auto; /* Pushes footer to the bottom */
-  border-top: 1px solid #2a3f6d; /* Separator line */
+.app-sidebar nav li a.active svg {
+    color: var(--brightfold-white);
 }
 
-.settings-menu .settings-button {
-  display: flex;
-  justify-content: space-between;
+/* Submenu Styles */
+.app-sidebar .submenu {
+  list-style: none;
+  padding-left: 0; /* Remove default padding */
+  margin: 0;
+  background-color: var(--brightfold-light-gray); /* Slightly different background */
+}
+
+.app-sidebar .submenu li a {
+  padding-left: 40px; /* Indent submenu items */
+  border-left: 5px solid transparent; /* Reset border */
+}
+
+.app-sidebar .submenu li a:hover {
+  background-color: #e0e0e0; /* Darker hover for submenu */
+}
+
+.app-sidebar .submenu li a.active {
+  background-color: var(--brightfold-blue); /* Keep active style consistent */
+  color: var(--brightfold-white);
+  border-left: 5px solid var(--brightfold-orange);
+}
+
+.submenu-toggle-icon {
+  margin-left: auto; /* Push icon to the right */
+  padding-left: 10px;
+  display: inline-flex;
   align-items: center;
 }
 
-.settings-menu .arrow {
-  font-size: 0.8em;
-  margin-left: 10px;
-}
 
-.settings-menu .submenu {
-  padding-left: 15px; /* Indent submenu items */
-  background-color: #2a3f6d; /* Slightly different background for submenu */
-}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-sidebar {
+    transform: translateX(-100%); /* Hide sidebar off-screen */
+    width: 250px;
+    height: calc(100vh - 70px); /* Adjust height for mobile header */
+    top: 70px; /* Position below mobile header */
+    z-index: 110; /* Ensure sidebar is above content when open */
+  }
 
-.settings-menu .submenu a {
-  padding: 10px 20px 10px 35px; /* Adjust padding for indentation */
-  font-size: 0.9em;
-}
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
 
-.settings-menu .submenu .active-link {
-  background-color: #0056b3; /* Slightly darker blue active color for submenu */
+  /* Add a toggle button style if needed */
 }
 

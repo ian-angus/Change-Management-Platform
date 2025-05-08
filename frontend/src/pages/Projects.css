@@ -1,20 +1,33 @@
-/* Projects Page Specific Styles */
+/* Projects.css */
 
 .projects-page {
-  /* Add styles for project list, modals, buttons etc. */
+  /* Add styles for the projects page container if needed */
 }
 
-/* Example: Style for the project list */
-.projects-page ul {
-  list-style: none;
-  padding: 0;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.projects-page li {
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
+.add-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.error-message {
+  background-color: #f8d7da; /* Light red */
+  color: #721c24; /* Dark red */
   padding: 10px 15px;
-  margin-bottom: 10px;
+  border: 1px solid #f5c6cb;
   border-radius: 4px;
+  margin-bottom: 20px;
 }
+
+/* Inherit table styles from index.css */
+/* Add specific overrides if needed */
+
+/* Modal styles are in index.css */
 

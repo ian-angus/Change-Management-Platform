@@ -1,20 +1,18 @@
 import React from 'react';
-import './Header.css'; // Import CSS for styling
-// Logo is placed in public/images
-const logoUrl = process.env.PUBLIC_URL + '/images/brightfold-logo.png';
+import './Header.css';
+import logo from '../../assets/BrightFold_Logo_Transparent.png'; // Adjust path as needed
 
 function Header() {
   return (
     <header className="app-header">
-      <div className="logo-container">
-        {/* Use the image logo */}
-        <img src={logoUrl} alt="BrightFold Logo" className="logo-image" />
-        {/* Remove or comment out the text logo */}
-        {/* <span className="logo-text">BrightFold Platform</span> */}
+      <div className="header-content">
+        <img src={logo} alt="BrightFold Logo" className="header-logo" />
+        {/* Tagline removed as requested */}
+        {/* <span className="header-tagline">Helping You Manage the People Side of Change</span> */}
       </div>
-      <div className="header-actions">
-        {/* Placeholder for user profile, notifications, etc. */}
-        {/* <button>User</button> */}
+      <div className="header-user">
+        <span className="welcome-message">Welcome, Change Manager</span>
+        {/* Add user profile/logout options here if needed */}
       </div>
     </header>
   );

@@ -1,33 +1,66 @@
-/* Header Styles */
+/* Header.css */
+
 .app-header {
+  background-color: var(--brightfold-white);
+  color: var(--brightfold-charcoal);
+  padding: 0 20px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding: 0 20px; /* Adjusted padding */
-  background-color: #ffffff; /* White background */
-  border-bottom: 1px solid #e0e0e0; /* Light border */
-  height: 80px; /* Increased height for larger logo */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: sticky; /* Make header sticky */
+  height: 150px; /* Increased height for larger logo */
+  position: fixed; /* Make header fixed */
   top: 0;
-  z-index: 1000; /* Ensure header stays on top */
+  left: 0;
+  right: 0;
+  z-index: 100; /* Ensure header is above sidebar */
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */ /* Removed as requested */
 }
 
-.logo-container {
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+  height: 120px; /* Significantly increased logo size */
+  width: auto;
+  margin-right: 15px;
+}
+
+.header-tagline {
+    font-size: 1.1em;
+    color: var(--brightfold-charcoal);
+    font-style: italic;
+}
+
+.header-user {
   display: flex;
   align-items: center;
-  height: 100%; /* Ensure container takes full header height */
 }
 
-.logo-image {
-  height: 70px; /* Significantly larger logo, adjust as needed based on aspect ratio */
-  /* Adjust width automatically or set explicitly if needed */
-  /* width: auto; */
+.welcome-message {
+  margin-right: 20px;
+  font-weight: bold; /* Make welcome message bold */
+  font-size: 1.2em; /* Make welcome message larger */
 }
 
-/* Removed logo-text styles */
+/* Add styles for user profile dropdown or logout button if needed */
 
-.header-actions {
-  /* Styles for user profile, notifications, etc. */
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    height: 70px; /* Adjust header height for mobile */
+    padding: 0 10px;
+  }
+  .header-logo {
+    height: 50px; /* Adjust logo size for mobile */
+  }
+  .header-tagline {
+      display: none; /* Hide tagline on smaller screens */
+  }
+  .welcome-message {
+    font-size: 1em;
+    margin-right: 10px;
+  }
 }
 

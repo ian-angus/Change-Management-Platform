@@ -1,131 +1,94 @@
 from flask import Blueprint, request, jsonify
-from models import db, Assessment, Project, AssessmentTemplate, Employee, AssessmentResult
+from app import db
+from models import Assessment, Project
+from datetime import datetime
 
-assessment_bp = Blueprint("assessment_bp", __name__)
+assessment_bp = Blueprint("assessment_bp", __name__, url_prefix="/api/assessments")
 
-@assessment_bp.route("/assessments", methods=["GET"])
+@assessment_bp.route("/", methods=["GET"])
 def get_assessments():
+    """Get assessments, filtered by project_id."""
     project_id = request.args.get("project_id")
-    query = Assessment.query
-    if project_id:
-        query = query.filter_by(project_id=project_id)
-    assessments = query.all()
-    return jsonify([{
-        "id": a.id,
-        "name": a.name,
-        "project_id": a.project_id,
-        "template_id": a.template_id,
-        "status": a.status,
-        "deployment_date": a.deployment_date.isoformat() if a.deployment_date else None,
-        "completion_date": a.completion_date.isoformat() if a.completion_date else None,
-        "project_name": a.project.name if a.project else None, # Include project name
-        "template_name": a.template.name if a.template else None # Include template name
-    } for a in assessments])
+    if not project_id:
+        return jsonify({"error": "project_id parameter is required"}), 400
 
-@assessment_bp.route("/assessments", methods=["POST"])
+    try:
+        project_id = int(project_id)
+        assessments = Assessment.query.filter_by(project_id=project_id).order_by(Assessment.creation_date.desc()).all()
+        assessment_list = [a.to_dict() for a in assessments]
+        return jsonify(assessment_list)
+    except ValueError:
+        return jsonify({"error": "Invalid project_id format"}), 400
+    except Exception as e:
+        print(f"Error fetching assessments: {e}") # Log error
+        return jsonify({"error": "An error occurred while fetching assessments."}), 500
+
+@assessment_bp.route("/", methods=["POST"])
 def create_assessment():
+    """Initiate a new assessment for a project based on type."""
     data = request.get_json()
-    if not data or not data.get("name") or not data.get("project_id") or not data.get("template_id"):
-        return jsonify({"error": "Assessment name, project_id, and template_id are required"}), 400
+    if not data or not data.get("project_id") or not data.get("assessment_type"):
+        return jsonify({"error": "project_id and assessment_type are required"}), 400
 
-    # Verify project and template exist
-    project = Project.query.get(data["project_id"])
-    if not project:
-        return jsonify({"error": "Project not found"}), 404
-    template = AssessmentTemplate.query.get(data["template_id"])
-    if not template:
-        return jsonify({"error": "Assessment Template not found"}), 404
+    try:
+        project_id = int(data["project_id"])
+        # Check if project exists
+        project = Project.query.get(project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
 
-    new_assessment = Assessment(
-        name=data["name"],
-        project_id=data["project_id"],
-        template_id=data["template_id"],
-        status=data.get("status", "Not Started")
-    )
-    db.session.add(new_assessment)
-    db.session.commit()
-    return jsonify({
-        "id": new_assessment.id,
-        "name": new_assessment.name,
-        "project_id": new_assessment.project_id,
-        "template_id": new_assessment.template_id,
-        "status": new_assessment.status
-    }), 201
+        new_assessment = Assessment(
+            project_id=project_id,
+            assessment_type=data["assessment_type"],
+            status="Not Started" # Default status
+            # Add other fields like results if provided during creation
+        )
+        db.session.add(new_assessment)
+        db.session.commit()
+        
+        # Return the newly created assessment data along with a success message
+        return jsonify({
+            "message": f"{new_assessment.assessment_type} assessment created successfully for project {project_id}",
+            "assessment": new_assessment.to_dict()
+        }), 201
 
-@assessment_bp.route("/assessments/<int:assessment_id>", methods=["GET"])
-def get_assessment(assessment_id):
-    assessment = Assessment.query.get_or_404(assessment_id)
-    return jsonify({
-        "id": assessment.id,
-        "name": assessment.name,
-        "project_id": assessment.project_id,
-        "template_id": assessment.template_id,
-        "status": assessment.status,
-        "deployment_date": assessment.deployment_date.isoformat() if assessment.deployment_date else None,
-        "completion_date": assessment.completion_date.isoformat() if assessment.completion_date else None,
-        "project_name": assessment.project.name if assessment.project else None,
-        "template_name": assessment.template.name if assessment.template else None
-    })
+    except ValueError:
+         return jsonify({"error": "Invalid project_id format"}), 400
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating assessment: {e}") # Log error
+        return jsonify({"error": "An error occurred while creating the assessment."}), 500
 
-@assessment_bp.route("/assessments/<int:assessment_id>", methods=["PUT"])
-def update_assessment(assessment_id):
-    assessment = Assessment.query.get_or_404(assessment_id)
-    data = request.get_json()
+@assessment_bp.route("/<int:assessment_id>/deploy", methods=["POST"])
+def deploy_assessment(assessment_id):
+    """Mark an assessment as deployed (updates status and timestamp)."""
+    try:
+        assessment = Assessment.query.get(assessment_id)
+        if not assessment:
+            return jsonify({"error": "Assessment not found"}), 404
 
-    if "name" in data:
-        assessment.name = data["name"]
-    if "status" in data:
-        assessment.status = data["status"]
-        # Potentially update deployment/completion dates based on status
-        # if data["status"] == "Deployed" and not assessment.deployment_date:
-        #     assessment.deployment_date = datetime.datetime.utcnow()
-        # elif data["status"] == "Completed" and not assessment.completion_date:
-        #     assessment.completion_date = datetime.datetime.utcnow()
+        # Check if assessment can be deployed (e.g., not already completed)
+        if assessment.status in ["Deployed", "Completed"]:
+             return jsonify({"message": "Assessment is already deployed or completed"}), 400
 
-    db.session.commit()
-    return jsonify({"message": "Assessment updated successfully"})
+        # Update status and completion_date (using completion_date for deployment time for now)
+        assessment.status = "Deployed"
+        assessment.completion_date = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": f"Assessment ID {assessment_id} deployed successfully.",
+            "assessment": assessment.to_dict()
+        }), 200
 
-# --- Assessment Results --- #
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deploying assessment {assessment_id}: {e}") # Log error
+        return jsonify({"error": "An error occurred while deploying the assessment."}), 500
 
-@assessment_bp.route("/assessments/<int:assessment_id>/results", methods=["GET"])
-def get_assessment_results(assessment_id):
-    assessment = Assessment.query.get_or_404(assessment_id)
-    results = assessment.results.all()
-    return jsonify([{
-        "result_id": r.id,
-        "employee_id": r.employee_id,
-        "employee_name": r.employee.name if r.employee else None,
-        "submission_date": r.submission_date.isoformat() if r.submission_date else None,
-        "answers": r.answers
-    } for r in results])
-
-@assessment_bp.route("/assessments/<int:assessment_id>/results", methods=["POST"])
-def submit_assessment_result(assessment_id):
-    assessment = Assessment.query.get_or_404(assessment_id)
-    data = request.get_json()
-    if not data or not data.get("employee_id") or not data.get("answers"):
-        return jsonify({"error": "employee_id and answers are required"}), 400
-
-    employee = Employee.query.get(data["employee_id"])
-    if not employee:
-        return jsonify({"error": "Employee not found"}), 404
-
-    # Check if result already submitted by this employee for this assessment
-    existing_result = AssessmentResult.query.filter_by(
-        assessment_id=assessment_id,
-        employee_id=data["employee_id"]
-    ).first()
-    if existing_result:
-        return jsonify({"error": "Result already submitted by this employee"}), 409
-
-    new_result = AssessmentResult(
-        assessment_id=assessment_id,
-        employee_id=data["employee_id"],
-        answers=data["answers"]
-    )
-    db.session.add(new_result)
-    db.session.commit()
-    return jsonify({"message": "Assessment result submitted successfully", "result_id": new_result.id}), 201
-
-# Add routes for deploying assessment to specific employees if needed
+# Potential future routes:
+# GET /<int:assessment_id> - Get details of a single assessment
+# PUT /<int:assessment_id> - Update assessment details or results
+# DELETE /<int:assessment_id> - Delete an assessment
 
