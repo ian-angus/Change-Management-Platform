@@ -1,0 +1,84 @@
+/* EmployeeTable.css */
+
+.employee-table-container {
+    margin-top: 20px;
+    overflow-x: auto; /* For responsiveness on smaller screens */
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    font-family: 'Open Sans', sans-serif;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.employee-table th,
+.employee-table td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.employee-table thead th {
+    background-color: #f0f2f5; /* Light grey background for header */
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Zebra-striping for readability - ERP best practice */
+.employee-table tbody tr:nth-of-type(even) {
+    background-color: #f9f9f9;
+}
+
+.employee-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.edit-btn {
+    background-color: #ffc107; /* BrightFold Orange/Yellow - Placeholder */
+    color: #212529;
+}
+
+.edit-btn:hover {
+    background-color: #e0a800;
+}
+
+.delete-btn {
+    background-color: #dc3545; /* BrightFold Red - Placeholder */
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Placeholder for search/filter controls if added above the table */
+.table-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.table-controls input[type="text"],
+.table-controls select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Open Sans', sans-serif;
+}
+
