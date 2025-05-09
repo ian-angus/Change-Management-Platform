@@ -33,8 +33,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m venv env
-        source env/bin/activate
-        ./env/bin/pip install -r backend/requirements.txt
+        # source env/bin/activate
+        python -m venv backend/env
+        backend/env/bin/pip install -r backend/requirements.txt
      # working-directory: ${{ env.WORKING_DIRECTORY }} # Run this step in the backend directory
 
     # Optional: Add a step for running backend tests here if you have them
