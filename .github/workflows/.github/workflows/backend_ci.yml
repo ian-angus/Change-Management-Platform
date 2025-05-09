@@ -19,7 +19,7 @@ jobs:
       PYTHON_VERSION: '3.11'
       # IMPORTANT: Replace 'your-backend-app-name' with the actual name of your Azure App Service for the backend
       APP_NAME: 'changemanagement-backend'
-      WORKING_DIRECTORY: '.../backend' # Set the working directory to the backend folder
+      WORKING_DIRECTORY: './backend' # Set the working directory to the backend folder
 
     steps:
     - name: Checkout code
