@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import Footer from './components/layout/Footer';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import ProjectOverview from './pages/ProjectOverview';
