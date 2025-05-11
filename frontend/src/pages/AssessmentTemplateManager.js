@@ -392,18 +392,6 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     }
   };
 
-  const handleSetDefault = async (templateId) => {
-    try {
-      await axios.put(`${apiBaseUrl}/assessment-templates/${templateId}/set-default`);
-      setSuccessMessage('Default template updated successfully');
-      fetchTemplates();
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      console.error("Failed to set default template:", err);
-      setError("Failed to set default template. Please try again.");
-    }
-  };
-
   const handleSaveTemplate = async (templateData) => {
     try {
       // Map 'name' to 'title' for backend compatibility
@@ -434,13 +422,6 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     const updatedQuestions = [...editingTemplate.questions];
     updatedQuestions[index] = { ...updatedQuestions[index], text: value };
     setEditingTemplate(prev => ({ ...prev, questions: updatedQuestions }));
-  };
-
-  const addQuestion = () => {
-    setEditingTemplate(prev => ({
-      ...prev,
-      questions: [...prev.questions, { text: '', type: 'scale', options: [] }] // Default new question
-    }));
   };
 
   const removeQuestion = (index) => {

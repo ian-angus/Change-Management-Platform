@@ -3,9 +3,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './GroupManagement.css';
 import { FaEdit, FaTrashAlt, FaUsersCog, FaPlus, FaSearch, FaTimes } from 'react-icons/fa'; // Added FaSearch, FaTimes
 
-// For local development, use relative API paths so the React proxy works
-const API_BASE_URL = '';
-
 // --- Helper Components ---
 
 // Simple Search Input Component
