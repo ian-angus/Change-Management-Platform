@@ -82,7 +82,7 @@ def create_app():
     # Configuration
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(24))
     db_path = os.path.join(app.instance_path, "dev.db")
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI", f"sqlite:///{db_path}")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
 
