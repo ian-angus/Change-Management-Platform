@@ -22,7 +22,7 @@ const EmployeeManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [searchParams, setSearchParams] = useState({ name: '', email: '', department: '', role_id: '' });
 
-    const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+    const API_BASE_URL = '/api';
 
     const fetchEmployees = useCallback(async (page = 1, params = {}) => {
         setLoading(true);

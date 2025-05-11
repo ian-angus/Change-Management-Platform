@@ -1,177 +1,75 @@
 // /home/ubuntu/melyn_cm_platform/frontend/src/pages/settings/AssessmentTemplateBuilder.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './AssessmentTemplateBuilder.css'; // Create this CSS file
-
-const API_BASE_URL = '/api'; // Use relative path
+import './AssessmentTemplateBuilder.css'; // Create this CSS file for styling
 
 function AssessmentTemplateBuilder() {
   const [templates, setTemplates] = useState([]);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-
-  // TODO: Add state for modals (create/edit template, manage questions)
-  // TODO: Add state for current template being edited/viewed
-  // TODO: Add state for questions within the current template
 
   useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = () => {
-    setLoadingTemplates(true);
+    setLoading(true);
     setError(null);
-    axios.get(`${API_BASE_URL}/assessment-templates/`)
-      .then(response => {
-        setTemplates(response.data);
-      })
+    axios.get('/api/assessment-templates')
+      .then(res => setTemplates(res.data.templates))
       .catch(err => {
-        console.error('Error fetching templates:', err);
         setError('Failed to load assessment templates.');
+        console.error(err);
       })
-      .finally(() => {
-        setLoadingTemplates(false);
-      });
-  };
-
-  // --- Placeholder Functions --- 
-  const handleCreateTemplate = () => {
-    console.log('Create new template');
-    setError('Create template functionality not yet implemented.');
-    setTimeout(() => setError(null), 3000);
-  };
-
-  const handleEditTemplate = (templateId) => {
-    console.log(`Edit template ${templateId}`);
-    setError('Edit template functionality not yet implemented.');
-    setTimeout(() => setError(null), 3000);
-  };
-
-  const handleDeleteTemplate = (templateId, templateTitle) => {
-    console.log(`Delete template ${templateId}`);
-     if (window.confirm(`Are you sure you want to delete the template "${templateTitle}"? This cannot be undone.`)) {
-        setError(null);
-        setSuccessMessage(null);
-        axios.delete(`${API_BASE_URL}/assessment-templates/${templateId}`)
-          .then(response => {
-            setSuccessMessage(response.data.message || 'Template deleted successfully!');
-            fetchTemplates(); // Refresh list
-            setTimeout(() => setSuccessMessage(null), 3000);
-          })
-          .catch(err => {
-            console.error('Error deleting template:', err);
-            setError(err.response?.data?.error || 'Failed to delete template.');
-            setTimeout(() => setError(null), 5000);
-          });
-     }
-  };
-
-  const handleManageQuestions = (templateId) => {
-    console.log(`Manage questions for template ${templateId}`);
-    setError('Manage questions functionality not yet implemented.');
-    setTimeout(() => setError(null), 3000);
-  };
-  
-  const handleSetDefault = (templateId) => {
-    console.log(`Set template ${templateId} as default`);
-    setError(null);
-    setSuccessMessage(null);
-    axios.put(`${API_BASE_URL}/assessment-templates/${templateId}/set-default`)
-      .then(response => {
-        setSuccessMessage('Template set as default successfully!');
-        fetchTemplates(); // Refresh list to show updated default status
-        setTimeout(() => setSuccessMessage(null), 3000);
-      })
-      .catch(err => {
-        console.error('Error setting default template:', err);
-        setError(err.response?.data?.error || 'Failed to set template as default.');
-        setTimeout(() => setError(null), 5000);
-      });
-  };
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="assessment-template-builder settings-section card">
-      <h3>Assessment Template Builder</h3>
-
-      <button className="action-button primary mb-3" onClick={handleCreateTemplate}>
-        Create New Template
-      </button>
-
-      {/* Status Messages */} 
-      {successMessage && <div className="success-message"><p>{successMessage}</p></div>}
-      {error && <div className="error-message"><p>{error}</p></div>}
-
-      {/* Template Table */} 
-      <div className="template-table-container">
-        {loadingTemplates ? (
-          <p>Loading templates...</p>
-        ) : templates.length === 0 && !error ? (
-          <p>No assessment templates found. Create one to get started.</p>
-        ) : (
-          <table className="settings-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Questions</th>
-                <th>Version</th>
-                <th>Default</th>
-                <th>Last Updated</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {templates.map(template => (
-                <tr key={template.id}>
-                  <td>{template.title}</td>
-                  <td>{template.description || '-'}</td>
-                  <td>{template.question_count}</td> 
-                  <td>v{template.version}</td>
-                  <td>{template.is_default ? 'Yes' : 'No'}</td>
-                  <td>{template.updated_at ? new Date(template.updated_at).toLocaleString() : 'N/A'}</td>
-                  <td className="action-buttons">
-                    <button 
-                      className="icon-button manage-questions-button" 
-                      onClick={() => handleManageQuestions(template.id)}
-                      title="Manage Questions"
-                    >
-                      Questions
-                    </button>
-                    <button 
-                      className="icon-button edit-button" 
-                      onClick={() => handleEditTemplate(template.id)}
-                      title="Edit Template"
-                    >
-                      Edit
-                    </button>
-                    {!template.is_default && (
-                      <button 
-                        className="icon-button set-default-button" 
-                        onClick={() => handleSetDefault(template.id)}
-                        title="Set as Default"
-                      >
-                        Set Default
-                      </button>
-                    )}
-                    <button 
-                      className="icon-button delete-button" 
-                      onClick={() => handleDeleteTemplate(template.id, template.title)}
-                      title="Delete Template"
-                    >
-                      Delete
-                    </button>
-                    {/* Add Duplicate button later */}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', color: '#FF6B00' }}>Assessment Management</h2>
+      <div className="template-header-row">
+        <button className="action-button primary" style={{ background: 'linear-gradient(90deg, #FF6B00 0%, #FF2D55 100%)', color: '#fff', fontFamily: 'Poppins, sans-serif', borderRadius: '8px', padding: '10px 20px', fontWeight: 600 }}>
+          + Create New Template
+        </button>
       </div>
-
-      {/* TODO: Add Modals for Create/Edit Template and Manage Questions */}
-
+      
+      {loading ? (
+        <div className="loading-state" style={{ textAlign: 'center', color: '#888', fontFamily: 'Open Sans, sans-serif', marginTop: '3rem' }}>
+          <p>Loading templates...</p>
+        </div>
+      ) : error ? (
+        <div className="error-state" style={{ textAlign: 'center', color: '#FF2D55', fontFamily: 'Open Sans, sans-serif', marginTop: '3rem' }}>
+          <p>{error}</p>
+        </div>
+      ) : templates.length === 0 ? (
+        <div className="empty-state" style={{ textAlign: 'center', color: '#888', fontFamily: 'Open Sans, sans-serif', marginTop: '3rem' }}>
+          <p style={{ fontSize: '1.2rem' }}>No assessment templates yet.</p>
+          <p style={{ fontSize: '1rem' }}>Click <span style={{ color: '#FF6B00', fontWeight: 600 }}>"+ Create New Template"</span> to get started.</p>
+        </div>
+      ) : (
+        <div className="template-cards-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'flex-start' }}>
+          {templates.map(template => (
+            <div key={template.id} className="template-card" style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: '1.5rem', minWidth: '300px', maxWidth: '350px', flex: '1 1 300px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontFamily: 'Poppins, sans-serif', color: '#1A73E8', marginBottom: '0.5rem' }}>{template.title}</h3>
+                <p style={{ color: '#666', fontFamily: 'Open Sans, sans-serif', marginBottom: '0.5rem' }}>{template.description || <span style={{ color: '#bbb' }}>No description</span>}</p>
+                <div style={{ fontSize: '0.95rem', color: '#888', marginBottom: '0.5rem' }}>
+                  <span>Questions: <b>{template.question_count}</b></span> &nbsp;|&nbsp; <span>Version: v{template.version}</span>
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem' }}>
+                  Status: <span style={{ color: template.status === 'Ready' ? '#00C48C' : '#FF6B00', fontWeight: 600 }}>{template.status}</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#aaa' }}>Last updated: {template.last_updated ? new Date(template.last_updated).toLocaleString() : 'N/A'}</div>
+              </div>
+              <div className="template-card-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button className="action-button" style={{ background: '#1A73E8', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontFamily: 'Poppins, sans-serif', fontWeight: 500 }}>Edit</button>
+                <button className="action-button" style={{ background: '#FF6B00', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontFamily: 'Poppins, sans-serif', fontWeight: 500 }}>Duplicate</button>
+                <button className="action-button" style={{ background: '#FF2D55', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontFamily: 'Poppins, sans-serif', fontWeight: 500 }}>Delete</button>
+                {!template.is_default && (
+                  <button className="action-button" style={{ background: '#00C48C', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontFamily: 'Poppins, sans-serif', fontWeight: 500 }}>Set Default</button>
+                )}
+                <button className="action-button" style={{ background: '#F4B400', color: '#fff', borderRadius: '6px', padding: '6px 14px', fontFamily: 'Poppins, sans-serif', fontWeight: 500 }}>Preview</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

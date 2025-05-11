@@ -3,21 +3,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './GroupManagement.css';
 import { FaEdit, FaTrashAlt, FaUsersCog, FaPlus, FaSearch, FaTimes } from 'react-icons/fa'; // Added FaSearch, FaTimes
 
-// Dynamically determine API base URL based on frontend hostname
-const getApiBaseUrl = () => {
-    const hostname = window.location.hostname;
-    // Assuming manus.computer structure: <port>-<hash>-<domain>
-    if (hostname.includes("manus.computer")) {
-        const parts = hostname.split("-");
-        // Replace the port part (e.g., 3000) with the backend port (5001)
-        parts[0] = "5001";
-        return `https://${parts.join("-")}`;
-    } else {
-        // Fallback for local development (if needed, adjust as necessary)
-        return "http://localhost:5001";
-    }
-};
-const API_BASE_URL = getApiBaseUrl();
+// For local development, use relative API paths so the React proxy works
+const API_BASE_URL = '';
 
 // --- Helper Components ---
 
@@ -58,7 +45,7 @@ function GroupManagement() {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/groups`);
+            const response = await fetch('/api/groups');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -74,10 +61,9 @@ function GroupManagement() {
 
     const fetchEmployees = useCallback(async () => {
         // Added console log for debugging start
-        console.log("Fetching employees from:", `${API_BASE_URL}/api/employees/`); 
+        console.log("Fetching employees from:", '/api/employees'); 
         try {
-            // Added trailing slash to the endpoint
-            const response = await fetch(`${API_BASE_URL}/api/employees/`); 
+            const response = await fetch('/api/employees'); 
             if (!response.ok) {
                 // Log the full response for debugging non-ok status
                 console.error("Fetch employees response not OK:", response);
@@ -86,14 +72,8 @@ function GroupManagement() {
             const data = await response.json();
             // Log the received data for debugging
             console.log("Received employee data:", data);
-            // Ensure data is an array before setting state
-            if (Array.isArray(data)) {
-                setEmployees(data);
-                setError(null); // Clear previous errors on success
-            } else {
-                console.error("Received employee data is not an array:", data);
-                throw new Error("Invalid data format received from server.");
-            }
+            setEmployees(data.employees);
+            setError(null); // Clear previous errors on success
         } catch (e) {
             // Log the actual error object for better debugging
             console.error("Failed to fetch employees:", e);
@@ -105,7 +85,7 @@ function GroupManagement() {
         setIsLoading(true); // Use loading state for detail fetch too
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}`);
+            const response = await fetch('/api/groups/' + groupId);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -188,8 +168,8 @@ function GroupManagement() {
         setIsLoading(true);
         setError(null);
         const url = currentGroup
-            ? `${API_BASE_URL}/api/groups/${currentGroup.id}`
-            : `${API_BASE_URL}/api/groups`;
+            ? '/api/groups/' + currentGroup.id
+            : '/api/groups';
         const method = currentGroup ? 'PUT' : 'POST';
 
         try {
@@ -217,7 +197,7 @@ function GroupManagement() {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/groups/${currentGroup.id}`, {
+            const response = await fetch('/api/groups/' + currentGroup.id, {
                 method: 'DELETE',
             });
             if (!response.ok) {
@@ -238,7 +218,7 @@ function GroupManagement() {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/groups/${currentGroup.id}/members`, {
+            const response = await fetch('/api/groups/' + currentGroup.id + '/members', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ employee_ids: Array.from(selectedEmployeesToAdd) }),
@@ -265,7 +245,7 @@ function GroupManagement() {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/groups/${currentGroup.id}/members/${employeeId}`, {
+            const response = await fetch('/api/groups/' + currentGroup.id + '/members/' + employeeId, {
                 method: 'DELETE',
             });
             if (!response.ok) {

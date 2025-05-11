@@ -45,8 +45,8 @@ function EmployeeManagement() {
     setError(null);
     try {
       // Use apiClient and remove /api prefix from URL, ensure endpoint is correct
-      const response = await apiClient.get('/employees/'); 
-      setEmployees(response.data);
+      const response = await apiClient.get('/employees');
+      setEmployees(response.data.employees);
     } catch (e) {
       console.error("Failed to load employees:", e);
       const errorMsg = e.response?.data?.error || e.message || "An unknown error occurred";
@@ -97,7 +97,7 @@ function EmployeeManagement() {
     e.preventDefault();
     setApiError(null);
     // Adjust URL for apiClient (remove /api prefix)
-    const url = currentEmployee ? `/employees/${currentEmployee.id}` : '/employees/';
+    const url = currentEmployee ? `/employees/${currentEmployee.id}` : '/employees';
     const method = currentEmployee ? 'put' : 'post'; // Axios methods are lowercase
 
     try {
@@ -151,7 +151,7 @@ function EmployeeManagement() {
         },
       });
       const result = response.data; // Axios provides data directly
-      setUploadStatus(`Upload successful! Added: ${result.processed_count}, Skipped/Errors: ${result.skipped_count}. Check console for details.`);
+      setUploadStatus(`Upload successful! Added: ${result.imported_count}, Skipped/Errors: ${result.skipped_count}. Check console for details.`);
       if (result.errors && result.errors.length > 0) {
         console.warn("Bulk Upload Errors:", result.errors);
       }

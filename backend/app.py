@@ -1,16 +1,20 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_migrate import Migrate
 
 # This is a test comment to trigger deployment
 # Import db instance from extensions
 from extensions import db
+from models import Project, Assessment, Employee, Group, GroupMember, AssessmentTemplate, AssessmentQuestion
 
 def seed_database():
     """Seeds the database with initial data if it's empty."""
     # Import models inside the function to ensure app context is active
-    from models import Project, Assessment, Employee, Group # Added Group
     # Import PMI phases from routes (or define centrally)
     from api.project_routes import PMI_PHASES
 
@@ -18,9 +22,9 @@ def seed_database():
     if not Employee.query.first():
         print("Seeding initial employee data...")
         # Use job_position instead of role
-        emp1 = Employee(name="Alice Wonderland", email="alice@example.com", job_position="Project Manager", department="IT")
-        emp2 = Employee(name="Bob The Builder", email="bob@example.com", job_position="Developer", department="Engineering")
-        emp3 = Employee(name="Charlie Chaplin", email="charlie@example.com", job_position="Change Lead", department="HR")
+        emp1 = Employee(name="Alice Wonderland", email="alice@example.com", job_position="Project Manager")
+        emp2 = Employee(name="Bob The Builder", email="bob@example.com", job_position="Developer")
+        emp3 = Employee(name="Charlie Chaplin", email="charlie@example.com", job_position="Change Lead")
         db.session.add_all([emp1, emp2, emp3])
         db.session.commit()
         print("Employee seeding complete.")
@@ -80,6 +84,7 @@ def create_app():
     db_path = os.path.join(app.instance_path, "dev.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
 
     # Ensure the instance folder exists
     try:
@@ -90,30 +95,31 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     CORS(app) # Enable CORS for all routes
+    migrate = Migrate(app, db)
+    jwt = JWTManager(app)
 
     # Import blueprints AFTER db is initialized
     from api.project_routes import project_bp
     from api.assessment_routes import assessment_bp
     from api.employee_routes import employee_bp
-    from api.group_routes import group_bp # Import group blueprint
+    from api.group_routes import group_bp
+    from api.assessment_template_routes import assessment_template_bp
 
-    app.register_blueprint(project_bp)
-    app.register_blueprint(assessment_bp)
-    app.register_blueprint(employee_bp)
-    app.register_blueprint(group_bp) # Register group blueprint
+    app.register_blueprint(project_bp, url_prefix="/api")
+    app.register_blueprint(assessment_bp, url_prefix="/api/assessments")
+    app.register_blueprint(employee_bp, url_prefix="/api")
+    app.register_blueprint(group_bp, url_prefix="/api/groups")
+    app.register_blueprint(assessment_template_bp, url_prefix="/api/assessment-templates")
 
-    # Create database tables and seed data within app context
+    # Create database tables within app context
     with app.app_context():
         db.create_all()
-        seed_database() # Call seeding function
 
     @app.route("/")
     def hello():
         return "BrightFold Backend Running!"
 
     return app
-
-
 
 if __name__ == '__main__':
     app = create_app()

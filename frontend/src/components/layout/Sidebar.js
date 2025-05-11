@@ -84,6 +84,12 @@ function Sidebar() {
                      <FaLayerGroup /> Groups {/* Added icon */}
                   </NavLink>
                 </li>
+                {/* Assessment Management sub-item */}
+                <li>
+                  <NavLink to="/settings/assessment-templates" className={({ isActive }) => isActive ? "active" : ""}>
+                    <FaClipboardList /> Assessment Management
+                  </NavLink>
+                </li>
                 {/* Add other settings sub-items here later */}
               </ul>
             )}

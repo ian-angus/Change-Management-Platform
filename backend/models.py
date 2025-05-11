@@ -5,13 +5,7 @@ from datetime import datetime
 # Association table for Project Stakeholders (Many-to-Many)
 project_stakeholders = db.Table("project_stakeholders",
     db.Column("project_id", db.Integer, db.ForeignKey("project.id"), primary_key=True),
-    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
-)
-
-# Association table for Group Members (Many-to-Many)
-group_members = db.Table("group_members",
-    db.Column("group_id", db.Integer, db.ForeignKey("group.id"), primary_key=True),
-    db.Column("employee_id", db.Integer, db.ForeignKey("employee.id"), primary_key=True)
+    db.Column("employee_id", db.Integer, db.ForeignKey("employees.id"), primary_key=True)
 )
 
 class Role(db.Model):
@@ -32,27 +26,19 @@ class Role(db.Model):
         }
 
 class Employee(db.Model):
-    __tablename__ = 'employee'
+    __tablename__ = 'employees'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    job_position = db.Column(db.String(80), nullable=True)
-    department = db.Column(db.String(80), nullable=True)
-    
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=True)
-    role_info = db.relationship('Role', backref=db.backref('employees', lazy='dynamic'))
-
-    source = db.Column(db.String(50), nullable=True, default="manual") 
+    job_position = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=True)
+    source = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     stakeholder_in_projects = db.relationship("Project", secondary=project_stakeholders,
                                               lazy="subquery",
                                               backref=db.backref("stakeholders", lazy=True))
-
-    member_of_groups = db.relationship("Group", secondary=group_members,
-                                       lazy="subquery",
-                                       backref=db.backref("members", lazy=True))
 
     def to_dict(self):
         return {
@@ -61,33 +47,49 @@ class Employee(db.Model):
             "email": self.email,
             "job_position": self.job_position,
             "department": self.department,
-            "role_id": self.role_id,
-            "role_name": self.role_info.name if self.role_info else None,
-            "source": self.source,
             "date_added": self.created_at.isoformat() if self.created_at else None,
-            "date_updated": self.updated_at.isoformat() if self.updated_at else None
+            "date_updated": self.updated_at.isoformat() if self.updated_at else None,
+            "source": self.source
         }
 
 class Group(db.Model):
-    __tablename__ = 'group'
+    __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    description = db.Column(db.Text, nullable=True)
-    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
-    last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    members = db.relationship('GroupMember', back_populates='group', lazy='joined')
 
     def to_dict(self, include_members=False):
         data = {
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "creation_date": self.creation_date.isoformat() if self.creation_date else None,
-            "last_modified_date": self.last_modified_date.isoformat() if self.last_modified_date else None,
-            "member_count": len(self.members) if hasattr(self, 'members') and self.members is not None else 0
+            "creation_date": self.created_at.isoformat() if self.created_at else None,
+            "last_modified_date": self.updated_at.isoformat() if self.updated_at else None,
+            "member_count": len(self.members) if self.members is not None else 0
         }
-        if include_members and hasattr(self, 'members') and self.members is not None:
+        if include_members and self.members is not None:
             data["members"] = [member.to_dict() for member in self.members]
         return data
+
+class GroupMember(db.Model):
+    __tablename__ = 'group_members'
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    group = db.relationship('Group', back_populates='members')
+    employee = db.relationship('Employee')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "group_id": self.group_id,
+            "employee_id": self.employee_id,
+            "date_added": self.created_at.isoformat() if self.created_at else None
+        }
 
 class Project(db.Model):
     __tablename__ = 'project'
@@ -143,5 +145,49 @@ class Assessment(db.Model):
             "results": self.results,
             "risk_level": self.risk_level,
             "readiness_score": self.readiness_score
+        }
+
+class AssessmentTemplate(db.Model):
+    __tablename__ = 'assessment_templates'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    questions = db.relationship('AssessmentQuestion', back_populates='template', cascade='all, delete-orphan')
+
+    def to_dict(self, include_questions=False):
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'creation_date': self.created_at.isoformat() if self.created_at else None,
+            'last_updated': self.updated_at.isoformat() if self.updated_at else None,
+            'question_count': len(self.questions) if self.questions else 0
+        }
+        if include_questions:
+            data['questions'] = [q.to_dict() for q in self.questions]
+        return data
+
+class AssessmentQuestion(db.Model):
+    __tablename__ = 'assessment_questions'
+    id = db.Column(db.Integer, primary_key=True)
+    template_id = db.Column(db.Integer, db.ForeignKey('assessment_templates.id'), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # e.g., 'Multiple Choice', 'Text', 'Rating'
+    options = db.Column(db.JSON)  # For multiple choice questions
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    template = db.relationship('AssessmentTemplate', back_populates='questions')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'template_id': self.template_id,
+            'text': self.text,
+            'type': self.type,
+            'options': self.options,
+            'creation_date': self.created_at.isoformat() if self.created_at else None,
+            'last_updated': self.updated_at.isoformat() if self.updated_at else None
         }
 

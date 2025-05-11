@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import './AssessmentTemplateManager.css'; // Create this CSS file
 
 function AssessmentTemplateManager({ apiBaseUrl }) {
@@ -7,19 +8,18 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   const [error, setError] = useState(null);
   const [editingTemplate, setEditingTemplate] = useState(null); // For create/edit form
   const [isCreating, setIsCreating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   // Fetch templates
   const fetchTemplates = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${apiBaseUrl}/assessment_templates`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setTemplates(data);
+      const response = await axios.get(`${apiBaseUrl}/assessment-templates`);
+      setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
     } catch (err) {
       console.error("Failed to fetch assessment templates:", err);
-      setError("Failed to load templates.");
+      setError("Failed to load templates. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -30,62 +30,73 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   }, [fetchTemplates]);
 
   const handleCreateNew = () => {
-    setEditingTemplate({ name: '', description: '', questions: [{ text: '', type: 'scale' }] }); // Basic structure
+    setEditingTemplate({ name: '', description: '', questions: [{ text: '', type: 'scale', options: [] }] });
     setIsCreating(true);
   };
 
   const handleEdit = (template) => {
-    // Ensure questions is an array, default if not present or invalid
-    const questions = Array.isArray(template.questions) ? template.questions : [{ text: '', type: 'scale' }];
-    setEditingTemplate({ ...template, questions });
+    setEditingTemplate(template);
     setIsCreating(false);
   };
 
-  const handleCancelEdit = () => {
-    setEditingTemplate(null);
-    setIsCreating(false);
+  const handleDuplicate = async (template) => {
+    try {
+      const response = await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/duplicate`);
+      setSuccessMessage('Template duplicated successfully');
+      fetchTemplates();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to duplicate template:", err);
+      setError("Failed to duplicate template. Please try again.");
+    }
   };
 
-  const handleSaveTemplate = async () => {
-    if (!editingTemplate || !editingTemplate.name.trim()) {
-      setError("Template name is required.");
+  const handleDelete = async (templateId) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) {
       return;
     }
-    // Basic validation for questions
-    if (!editingTemplate.questions || editingTemplate.questions.some(q => !q.text.trim())) {
-        setError("All questions must have text.");
-        return;
-    }
-
-    setLoading(true); // Indicate saving
-    setError(null);
-
-    const url = isCreating
-      ? `${apiBaseUrl}/assessment_templates`
-      : `${apiBaseUrl}/assessment_templates/${editingTemplate.id}`;
-    const method = isCreating ? 'POST' : 'PUT';
-
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingTemplate),
-      });
+      await axios.delete(`${apiBaseUrl}/assessment-templates/${templateId}`);
+      setSuccessMessage('Template deleted successfully');
+      fetchTemplates();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+      setError("Failed to delete template. Please try again.");
+    }
+  };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+  const handleSetDefault = async (templateId) => {
+    try {
+      await axios.put(`${apiBaseUrl}/assessment-templates/${templateId}/set-default`);
+      setSuccessMessage('Default template updated successfully');
+      fetchTemplates();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to set default template:", err);
+      setError("Failed to set default template. Please try again.");
+    }
+  };
+
+  const handleSaveTemplate = async (templateData) => {
+    try {
+      // Map 'name' to 'title' for backend compatibility
+      const payload = { ...templateData, title: templateData.name };
+      if (isCreating) {
+        await axios.post(`${apiBaseUrl}/assessment-templates`, payload);
+        setSuccessMessage('Template created successfully');
+      } else {
+        await axios.put(`${apiBaseUrl}/assessment-templates/${editingTemplate.id}`, payload);
+        setSuccessMessage('Template updated successfully');
       }
-
       setEditingTemplate(null);
       setIsCreating(false);
-      fetchTemplates(); // Refresh the list
+      fetchTemplates();
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error("Failed to save template:", err);
-      setError(`Failed to save template: ${err.message}`);
-      setLoading(false); // Stop loading indicator on error
+      setError("Failed to save template. Please try again.");
     }
-    // setLoading(false) will be called by fetchTemplates on success
   };
 
   const handleInputChange = (e) => {
@@ -102,7 +113,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   const addQuestion = () => {
     setEditingTemplate(prev => ({
       ...prev,
-      questions: [...prev.questions, { text: '', type: 'scale' }] // Default new question
+      questions: [...prev.questions, { text: '', type: 'scale', options: [] }] // Default new question
     }));
   };
 
@@ -113,14 +124,14 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   };
 
   // Render Logic
-  if (loading) return <p>Loading templates...</p>;
+  if (loading) return <div className="loading-state"><p>Loading templates...</p></div>;
 
   // Form View
   if (editingTemplate) {
     return (
       <div className="template-form">
         <h3>{isCreating ? 'Create New Template' : 'Edit Template'}</h3>
-        {error && <p className="error-message">{error}</p>}
+        {error && <div className="error-message">{error}</div>}
         <div className="form-group">
           <label htmlFor="name">Template Name *</label>
           <input
@@ -162,8 +173,8 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
         <button onClick={addQuestion} className="add-question-btn">Add Question</button>
 
         <div className="form-actions">
-          <button onClick={handleCancelEdit} className="cancel-btn">Cancel</button>
-          <button onClick={handleSaveTemplate} className="submit-btn">Save Template</button>
+          <button onClick={() => { setEditingTemplate(null); setIsCreating(false); }} className="cancel-btn">Cancel</button>
+          <button onClick={() => handleSaveTemplate(editingTemplate)} className="save-btn">Save Template</button>
         </div>
       </div>
     );
@@ -172,22 +183,52 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   // List View
   return (
     <div className="template-manager">
-      {error && <p className="error-message">{error}</p>}
-      <button onClick={handleCreateNew} className="create-template-btn">Create New Template</button>
-      {templates.length > 0 ? (
-        <ul className="template-list">
-          {templates.map(template => (
-            <li key={template.id}>
-              <span>{template.name}</span>
-              <div className="template-actions">
-                <button onClick={() => handleEdit(template)} className="edit-btn">Edit</button>
-                {/* Add Delete button later */}
-              </div>
-            </li>
-          ))}
-        </ul>
+      {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
+      
+      <div className="template-header">
+        <h2>Assessment Templates</h2>
+        <button onClick={handleCreateNew} className="create-template-btn">
+          Create New Template
+        </button>
+      </div>
+
+      {templates.length === 0 ? (
+        <div className="empty-state">
+          <p>No assessment templates found. Create one to get started.</p>
+        </div>
       ) : (
-        <p>No assessment templates found. Create one to get started.</p>
+        <div className="templates-grid">
+          {templates.map(template => (
+            <div key={template.id} className="template-card">
+              <div className="template-header">
+                <h3>{template.name}</h3>
+                {template.is_default && <span className="default-badge">Default</span>}
+              </div>
+              <p className="template-description">{template.description || 'No description'}</p>
+              <div className="template-meta">
+                <span>{template.question_count} questions</span>
+                <span>Last updated: {new Date(template.last_updated).toLocaleDateString()}</span>
+              </div>
+              <div className="template-actions">
+                <button onClick={() => handleEdit(template)} className="edit-btn">
+                  Edit
+                </button>
+                <button onClick={() => handleDuplicate(template)} className="duplicate-btn">
+                  Duplicate
+                </button>
+                {!template.is_default && (
+                  <button onClick={() => handleSetDefault(template.id)} className="set-default-btn">
+                    Set as Default
+                  </button>
+                )}
+                <button onClick={() => handleDelete(template.id)} className="delete-btn">
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

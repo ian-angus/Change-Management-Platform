@@ -49,9 +49,9 @@ function StakeholderGroupManagement() {
 
   const fetchEmployees = () => {
     setLoadingEmployees(true);
-    axios.get(`${API_BASE_URL}/employees/`)
+    axios.get(`${API_BASE_URL}/employees`)
       .then(response => {
-        setEmployees(response.data);
+        setEmployees(response.data.employees);
       })
       .catch(err => {
         console.error('Error fetching employees:', err);

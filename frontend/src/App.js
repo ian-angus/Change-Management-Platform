@@ -11,6 +11,7 @@ import Plans from './pages/Plans';
 import Stakeholders from './pages/Stakeholders';
 import EmployeeManagement from './pages/EmployeeManagement'; // Import EmployeeManagement
 import GroupManagement from './pages/GroupManagement'; // Import GroupManagement
+import SettingsAssessmentTemplates from './pages/settings/SettingsAssessmentTemplates';
 // Import Reports page if it exists
 // import Reports from './pages/Reports';
 import './App.css';
@@ -35,6 +36,7 @@ function App() {
               <Route path="/settings/employees" element={<EmployeeManagement />} />
               {/* Add route for Group Management under Settings */}
               <Route path="/settings/groups" element={<GroupManagement />} />
+              <Route path="/settings/assessment-templates" element={<SettingsAssessmentTemplates apiBaseUrl="/api" />} />
               {/* Add route for Reports if implemented */}
               {/* <Route path="/reports" element={<Reports />} /> */}
               {/* Optional: Add a catch-all or redirect for /settings if needed */}

@@ -18,7 +18,7 @@ function SettingsEmployeeManagement({ apiBaseUrl }) {
       const response = await fetch(`${apiBaseUrl}/employees`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      setEmployees(data);
+      setEmployees(data.employees);
     } catch (err) {
       console.error("Failed to fetch employees:", err);
       setError("Failed to load employees.");

@@ -3,7 +3,7 @@ from extensions import db
 from models import Assessment, Project
 from datetime import datetime
 
-assessment_bp = Blueprint("assessment_bp", __name__, url_prefix="/api/assessments")
+assessment_bp = Blueprint("assessment_bp", __name__)
 
 @assessment_bp.route("/", methods=["GET"])
 def get_assessments():
