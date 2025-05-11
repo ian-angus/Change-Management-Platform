@@ -367,7 +367,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
 
   const handleDuplicate = async (template) => {
     try {
-      const response = await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/duplicate`);
+      await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/duplicate`);
       setSuccessMessage('Template duplicated successfully');
       fetchTemplates();
       setTimeout(() => setSuccessMessage(null), 3000);

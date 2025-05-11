@@ -65,12 +65,12 @@ function Sidebar() {
           {/* Settings with Submenu */}
           <li className={isSettingsOpen ? 'submenu-open' : ''}>
             {/* Make the main Settings item clickable to toggle, but don't navigate */}
-            <a href="#" onClick={toggleSettings} className={isSettingsActive ? "active" : ""}>
+            <button type="button" onClick={toggleSettings} className={isSettingsActive ? "active" : ""} style={{ background: 'none', border: 'none', padding: 0, margin: 0, width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               <FaCog /> Settings
               <span className="submenu-toggle-icon">
                 {isSettingsOpen ? <FaChevronDown /> : <FaChevronRight />}
               </span>
-            </a>
+            </button>
             {isSettingsOpen && (
               <ul className="submenu">
                 <li>
