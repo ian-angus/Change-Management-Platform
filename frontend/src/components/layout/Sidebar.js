@@ -11,15 +11,8 @@ function Sidebar() {
   const isSettingsActive = location.pathname.startsWith('/settings');
 
   // Toggle Settings submenu
-  const toggleSettings = (e) => {
-    // Prevent navigation if clicking the main Settings item itself
-    // Check if the closest anchor's href is exactly '#' to target the main toggle link
-    const anchor = e.target.closest('a');
-    if (anchor && anchor.getAttribute('href') === '#') {
-        e.preventDefault();
-        setIsSettingsOpen(!isSettingsOpen);
-    }
-    // Allow navigation if clicking a submenu item (NavLink)
+  const toggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
   };
 
   // Keep settings open if a settings sub-page is active
