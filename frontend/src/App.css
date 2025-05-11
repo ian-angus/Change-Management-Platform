@@ -27,7 +27,7 @@
     flex-direction: column;
   }
   .app-content {
-    margin-left: 0; /* Sidebar might be hidden or overlay */
+    margin-left: 0; /* Sidebar might be hidden or overla */
     margin-top: 70px; /* Adjust if header height changes on mobile */
   }
 }
