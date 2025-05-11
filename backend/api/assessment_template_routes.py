@@ -104,11 +104,11 @@ def get_template_questions(template_id):
 def add_template_question(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     data = request.get_json()
-    if not data or not data.get("label") or not data.get("type"):
-        return jsonify({"error": "Question label and type are required"}), 400
+    if not data or not data.get("text") or not data.get("type"):
+        return jsonify({"error": "Question text and type are required"}), 400
     new_q = AssessmentQuestion(
         template_id=template.id,
-        label=data["label"],
+        text=data["text"],
         type=data["type"],
         required=data.get("required", False),
         helper_text=data.get("helper_text"),
@@ -127,7 +127,7 @@ def update_template_question(question_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400
-    q.label = data.get("label", q.label)
+    q.text = data.get("text", q.text)
     q.type = data.get("type", q.type)
     q.required = data.get("required", q.required)
     q.helper_text = data.get("helper_text", q.helper_text)

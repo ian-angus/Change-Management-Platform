@@ -176,6 +176,11 @@ class AssessmentQuestion(db.Model):
     text = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(50), nullable=False)  # e.g., 'Multiple Choice', 'Text', 'Rating'
     options = db.Column(db.JSON)  # For multiple choice questions
+    required = db.Column(db.Boolean, default=False)
+    helper_text = db.Column(db.String(255), nullable=True)
+    placeholder = db.Column(db.String(255), nullable=True)
+    default_answer = db.Column(db.String(255), nullable=True)
+    order = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     template = db.relationship('AssessmentTemplate', back_populates='questions')
@@ -187,6 +192,11 @@ class AssessmentQuestion(db.Model):
             'text': self.text,
             'type': self.type,
             'options': self.options,
+            'required': self.required,
+            'helper_text': self.helper_text,
+            'placeholder': self.placeholder,
+            'default_answer': self.default_answer,
+            'order': self.order,
             'creation_date': self.created_at.isoformat() if self.created_at else None,
             'last_updated': self.updated_at.isoformat() if self.updated_at else None
         }
