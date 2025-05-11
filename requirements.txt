@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-Cors
+SQLAlchemy
+psycopg2-binary
+pandas
+openpyxl
+Werkzeug 
