@@ -72,5 +72,5 @@ jobs:
         with:
           app-name: 'changemanagement-backend'
           slot-name: 'Production'
-          package: backend
+          package: python-app/backend
           
