@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Flask app via Kudu Zip Deploy
+name: Build and deploy Flask app via Kudu Zip Deploy (regional)
 
 on:
   push:
@@ -39,8 +39,8 @@ jobs:
       - name: List contents of deploy.zip
         run: unzip -l deploy.zip
 
-      - name: Deploy using raw Kudu Zip Deploy
+      - name: Deploy using raw Kudu Zip Deploy (regional endpoint)
         run: |
-          curl -X POST "https://changemanagement-backend-ahfre3hvgcerbrgp.scm.azurewebsites.net/api/zipdeploy" \
+          curl -X POST "https://changemanagement-backend-ahfre3hvgcerbrgp.scm.canadacentral-01.azurewebsites.net/api/zipdeploy" \
           -u ${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASSWORD }} \
           --data-binary @"deploy.zip"
