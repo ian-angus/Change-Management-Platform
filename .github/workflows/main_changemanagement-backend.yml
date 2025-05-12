@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Deploy full backend folder via Kudu Zip Deploy (.war trick)
+name: Build and Deploy Python app to Azure Web App
 
 on:
   push:
@@ -13,33 +13,31 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Create virtual environment and install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r backend/requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r backend/requirements.txt
 
-      - name: Zip entire backend folder
-        run: |
-          zip -r deploy.war backend -x "backend/venv/*"
+    - name: Zip application code
+      run: |
+        cd backend
+        zip -r ../app.zip .
 
-      - name: List contents of deploy.war
-        run: unzip -l deploy.war
-
-      - name: Deploy using raw Kudu Zip Deploy (.war trick)
-        run: |
-          curl -X POST "https://changemanagement-backend-ahfre3hvgcerbrgp.scm.canadacentral-01.azurewebsites.net/api/zipdeploy" \
-          -u ${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASSWORD }} \
-          --data-binary @"deploy.war"
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: changemanagement-backend
+        slot-name: Production
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: app.zip
