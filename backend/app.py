@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_migrate import Migrate
+from azure.identity import DefaultAzureCredential
 
 # This is a test comment to trigger deployment
 # Import db instance from extensions
@@ -81,8 +82,14 @@ def create_app():
 
     # Configuration
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(24))
-    db_path = os.path.join(app.instance_path, "dev.db")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI", f"sqlite:///{db_path}")
+    
+    # Database configuration
+    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    else:
+        db_path = os.path.join(app.instance_path, "dev.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
 

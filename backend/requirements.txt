@@ -6,3 +6,5 @@ psycopg2-binary
 pandas
 openpyxl
 Werkzeug
+pyodbc
+azure-identity
