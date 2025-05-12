@@ -5,4 +5,9 @@ SQLAlchemy
 psycopg2-binary
 pandas
 openpyxl
-Werkzeug 
+Werkzeug
+python-dotenv
+Flask-Migrate
+flask_jwt_extended
+gunicorn
+pyodbc

@@ -1,3 +1,4 @@
+import sys
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -8,6 +9,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask_migrate import Migrate
 from azure.identity import DefaultAzureCredential
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # This is a test comment to trigger deployment
 # Import db instance from extensions
 from extensions import db
@@ -127,7 +129,7 @@ def create_app():
         return "BrightFold Backend Running!"
 
     return app
-
+app = create_app()
 if __name__ == '__main__':
     app = create_app()
     app.run(host='0.0.0.0', port=5001, debug=True)
