@@ -50,4 +50,35 @@ jobs:
         with:
           app-name: 'changemanagement-backend'
           slot-name: 'Production'
-          package: backend.zip
+          deploy:
+  runs-on: ubuntu-latest
+  needs: build
+  environment:
+    name: 'Production'
+    url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+  permissions:
+    id-token: write
+    contents: read
+
+  steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v4
+      with:
+        name: python-app
+        path: python-app
+
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69B88C870A504F298F4FD0D076822D1E }}
+        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1764883F0D494FD0B4ACA1FF42A71FE4 }}
+        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_70147DA6D36A4D358A0CB0131866CF58 }}
+
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v3
+      id: deploy-to-webapp
+      with:
+        app-name: 'changemanagement-backend'
+        slot-name: 'Production'
+        package: ./python-app
+
