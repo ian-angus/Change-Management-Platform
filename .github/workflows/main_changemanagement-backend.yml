@@ -1,7 +1,8 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-name: Build and package backend for Azure
+
+name: Build and deploy Flask app via Kudu Zip Deploy
 
 on:
   push:
@@ -10,11 +11,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-zip:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
 
     steps:
       - name: Checkout code
@@ -31,16 +31,16 @@ jobs:
           source venv/bin/activate
           pip install -r backend/requirements.txt
 
-      - name: Zip backend contents (flattened structure)
+      - name: Zip backend contents (excluding venv/)
         run: |
           cd backend
-          zip -r ../deploy.zip .
+          zip -r ../deploy.zip . -x "venv/*"
 
       - name: List contents of deploy.zip
         run: unzip -l deploy.zip
 
-      - name: Upload deploy.zip as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-package
-          path: deploy.zip
+      - name: Deploy using raw Kudu Zip Deploy
+        run: |
+          curl -X POST "https://changemanagement-backend.scm.azurewebsites.net/api/zipdeploy" \
+          -u ${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASSWORD }} \
+          --data-binary @"deploy.zip"
