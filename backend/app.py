@@ -1,3 +1,4 @@
+import sys
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -7,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_migrate import Migrate
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # This is a test comment to trigger deployment
 # Import db instance from extensions
 from extensions import db
