@@ -41,6 +41,6 @@ jobs:
 
       - name: Deploy using raw Kudu Zip Deploy
         run: |
-          curl -X POST "https://changemanagement-backend.scm.azurewebsites.net/api/zipdeploy" \
+          curl -X POST "https://changemanagement-backend-ahfre3hvgcerbrgp.scm.azurewebsites.net/api/zipdeploy" \
           -u ${{ secrets.AZURE_DEPLOY_USER }}:${{ secrets.AZURE_DEPLOY_PASSWORD }} \
           --data-binary @"deploy.zip"
