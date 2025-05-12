@@ -7,3 +7,7 @@ pandas
 openpyxl
 Werkzeug
 python-dotenv
+Flask-Migrate
+flask_jwt_extended
+gunicorn
+pyodbc
