@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* index.css */
 
 :root {
@@ -14,6 +18,7 @@
   --font-primary: 'Arial', sans-serif; /* Example: Replace with actual BrightFold font */
 }
 
+/* Commented out to allow Tailwind to style body and headings
 body {
   margin: 0;
   font-family: var(--font-primary);
@@ -23,16 +28,17 @@ body {
   color: var(--brightfold-charcoal);
 }
 
+h1, h2, h3, h4, h5, h6 {
+  color: var(--brightfold-blue);
+}
+*/
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 /* General Styles */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--brightfold-blue);
-}
-
 button {
   cursor: pointer;
   padding: 10px 15px;

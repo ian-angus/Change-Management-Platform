@@ -50,7 +50,7 @@ function SettingsGroupManagement({ apiBaseUrl }) {
   return (
     <div className="settings-page settings-group-management">
       <h2>Settings: Group Management</h2>
-      <p>Create and manage stakeholder groups. Groups created here might be templates or global.</p>
+      <p>Create, view, and manage stakeholder groups for your organization.</p>
       {/* Note: Functionality might need refinement based on whether groups are global or project-specific */} 
 
       <button onClick={handleOpenCreateModal} className="add-group-btn">

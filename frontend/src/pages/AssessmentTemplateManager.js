@@ -38,7 +38,7 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
 
   const fetchQuestions = async () => {
     try {
-      const res = await axios.get(`${apiBaseUrl}/assessment-templates/${template.id}/questions`);
+      const res = await axios.get(`${apiBaseUrl}/assessment_templates/${template.id}/questions`);
       setQuestions(res.data);
     } catch (err) {
       setError('Failed to load questions.');
@@ -97,7 +97,7 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
       if (editingId) {
         await axios.put(`${apiBaseUrl}/assessment_questions/${editingId}`, payload);
       } else {
-        await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/questions`, payload);
+        await axios.post(`${apiBaseUrl}/assessment_templates/${template.id}/questions`, payload);
       }
       resetForm();
       fetchQuestions();
@@ -341,7 +341,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${apiBaseUrl}/assessment-templates`);
+      const response = await axios.get(`${apiBaseUrl}/assessment_templates`);
       setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
     } catch (err) {
       console.error("Failed to fetch assessment templates:", err);
@@ -367,7 +367,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
 
   const handleDuplicate = async (template) => {
     try {
-      await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/duplicate`);
+      await axios.post(`${apiBaseUrl}/assessment_templates/${template.id}/duplicate`);
       setSuccessMessage('Template duplicated successfully');
       fetchTemplates();
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -382,7 +382,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
       return;
     }
     try {
-      await axios.delete(`${apiBaseUrl}/assessment-templates/${templateId}`);
+      await axios.delete(`${apiBaseUrl}/assessment_templates/${templateId}`);
       setSuccessMessage('Template deleted successfully');
       fetchTemplates();
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -397,10 +397,10 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
       // Map 'name' to 'title' for backend compatibility
       const payload = { ...templateData, title: templateData.name };
       if (isCreating) {
-        await axios.post(`${apiBaseUrl}/assessment-templates`, payload);
+        await axios.post(`${apiBaseUrl}/assessment_templates`, payload);
         setSuccessMessage('Template created successfully');
       } else {
-        await axios.put(`${apiBaseUrl}/assessment-templates/${editingTemplate.id}`, payload);
+        await axios.put(`${apiBaseUrl}/assessment_templates/${editingTemplate.id}`, payload);
         setSuccessMessage('Template updated successfully');
       }
       setEditingTemplate(null);
@@ -434,7 +434,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     setPreviewTemplate(template);
     setLoadingPreview(true);
     try {
-      const response = await axios.get(`${apiBaseUrl}/assessment-templates/${template.id}/questions`);
+      const response = await axios.get(`${apiBaseUrl}/assessment_templates/${template.id}/questions`);
       setPreviewQuestions(response.data);
     } catch (err) {
       setPreviewQuestions([]);

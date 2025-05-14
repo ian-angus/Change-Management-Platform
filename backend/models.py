@@ -88,7 +88,8 @@ class GroupMember(db.Model):
             "id": self.id,
             "group_id": self.group_id,
             "employee_id": self.employee_id,
-            "date_added": self.created_at.isoformat() if self.created_at else None
+            "date_added": self.created_at.isoformat() if self.created_at else None,
+            "employee": self.employee.to_dict() if self.employee else None
         }
 
 class Project(db.Model):

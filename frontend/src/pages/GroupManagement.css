@@ -7,7 +7,6 @@
 
 .group-management-container h1 {
     font-family: 'Poppins', sans-serif; /* Use Poppins for headings */
-    color: #333;
     margin-bottom: 1.5rem;
 }
 
@@ -413,5 +412,12 @@
     font-size: 0.85rem;
     color: #666;
     margin-top: 2px;
+}
+
+.settings-heading-blue {
+    color: #007bff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
 }
 

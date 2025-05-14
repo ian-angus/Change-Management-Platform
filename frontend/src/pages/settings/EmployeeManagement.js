@@ -113,8 +113,9 @@ function EmployeeManagement() {
   };
 
   return (
-    <div className="employee-management settings-section card"> {/* Reuse styles */}
-      <h3>Employee Upload & Management</h3>
+    <div className="employee-management settings-section card">
+      <h1 className="settings-heading-blue">Settings: Employee Management</h1>
+      <p>Upload, view, and manage employees for your organization.</p>
 
       {/* Upload Area */} 
       <div className="upload-area form-group">

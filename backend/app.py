@@ -118,7 +118,7 @@ def create_app():
     app.register_blueprint(assessment_bp, url_prefix="/api/assessments")
     app.register_blueprint(employee_bp, url_prefix="/api")
     app.register_blueprint(group_bp, url_prefix="/api/groups")
-    app.register_blueprint(assessment_template_bp, url_prefix="/api/assessment-templates")
+    app.register_blueprint(assessment_template_bp, url_prefix="/api")
 
     # Create database tables within app context
     with app.app_context():

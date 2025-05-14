@@ -5,14 +5,14 @@ from datetime import datetime
 assessment_template_bp = Blueprint("assessment_template_bp", __name__)
 
 # --- Template CRUD ---
-@assessment_template_bp.route("", methods=["GET"])
-@assessment_template_bp.route("/", methods=["GET"])
+@assessment_template_bp.route("/assessment-templates", methods=["GET"])
+@assessment_template_bp.route("/assessment_templates", methods=["GET"])
 def get_assessment_templates():
     templates = AssessmentTemplate.query.order_by(AssessmentTemplate.updated_at.desc()).all()
     return jsonify({"templates": [t.to_dict() for t in templates]})
 
-@assessment_template_bp.route("", methods=["POST"])
-@assessment_template_bp.route("/", methods=["POST"])
+@assessment_template_bp.route("/assessment-templates", methods=["POST"])
+@assessment_template_bp.route("/assessment_templates", methods=["POST"])
 def create_assessment_template():
     data = request.get_json()
     if not data or not data.get("name"):
@@ -27,12 +27,14 @@ def create_assessment_template():
     db.session.commit()
     return jsonify(new_template.to_dict()), 201
 
-@assessment_template_bp.route("/<int:template_id>", methods=["GET"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>", methods=["GET"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>", methods=["GET"])
 def get_assessment_template(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     return jsonify(template.to_dict(include_questions=True))
 
-@assessment_template_bp.route("/<int:template_id>", methods=["PUT"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>", methods=["PUT"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>", methods=["PUT"])
 def update_assessment_template(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     data = request.get_json()
@@ -46,7 +48,8 @@ def update_assessment_template(template_id):
     db.session.commit()
     return jsonify(template.to_dict(include_questions=True))
 
-@assessment_template_bp.route("/<int:template_id>", methods=["DELETE"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>", methods=["DELETE"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>", methods=["DELETE"])
 def delete_assessment_template(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     db.session.delete(template)
@@ -54,7 +57,8 @@ def delete_assessment_template(template_id):
     return jsonify({"message": "Template deleted"}), 200
 
 # --- Duplicate Template ---
-@assessment_template_bp.route("/<int:template_id>/duplicate", methods=["POST"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>/duplicate", methods=["POST"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>/duplicate", methods=["POST"])
 def duplicate_assessment_template(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     new_template = AssessmentTemplate(
@@ -85,7 +89,8 @@ def duplicate_assessment_template(template_id):
     return jsonify(new_template.to_dict(include_questions=True)), 201
 
 # --- Set Default Template ---
-@assessment_template_bp.route("/<int:template_id>/set-default", methods=["PUT"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>/set-default", methods=["PUT"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>/set-default", methods=["PUT"])
 def set_default_assessment_template(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     # Unset previous default
@@ -95,12 +100,14 @@ def set_default_assessment_template(template_id):
     return jsonify({"message": "Template set as default", "template": template.to_dict()})
 
 # --- Question Management ---
-@assessment_template_bp.route("/<int:template_id>/questions", methods=["GET"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>/questions", methods=["GET"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>/questions", methods=["GET"])
 def get_template_questions(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     return jsonify([q.to_dict() for q in template.questions])
 
-@assessment_template_bp.route("/<int:template_id>/questions", methods=["POST"])
+@assessment_template_bp.route("/assessment-templates/<int:template_id>/questions", methods=["POST"])
+@assessment_template_bp.route("/assessment_templates/<int:template_id>/questions", methods=["POST"])
 def add_template_question(template_id):
     template = AssessmentTemplate.query.get_or_404(template_id)
     data = request.get_json()

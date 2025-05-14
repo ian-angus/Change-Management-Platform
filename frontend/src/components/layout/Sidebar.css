@@ -83,6 +83,27 @@
   align-items: center;
 }
 
+/* Add spacing above the Settings section */
+.app-sidebar nav li.submenu-open > button,
+.app-sidebar nav li > button {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  padding-left: 24px;   /* Increased from 8px to 24px */
+  font-size: 1.1em;
+}
+
+/* Add spacing to the submenu itself */
+.app-sidebar .submenu {
+  margin-bottom: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  padding-left: 12px;   /* Add left padding to submenu */
+}
+
+/* Optional: Add a little left padding to the Settings icon */
+.app-sidebar nav li > button svg {
+  margin-right: 10px;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

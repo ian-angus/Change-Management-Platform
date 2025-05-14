@@ -3,6 +3,7 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
 from models import Group, Employee, GroupMember
+from sqlalchemy.orm import joinedload
 
 group_bp = Blueprint("group_bp", __name__, url_prefix="/groups")
 
@@ -114,8 +115,8 @@ def add_group_members(group_id):
 
         db.session.commit()
 
-        # Refresh group with members
-        group = Group.query.get(group_id)
+        # Refresh group with members and employees eagerly loaded
+        group = Group.query.options(joinedload(Group.members).joinedload(GroupMember.employee)).get(group_id)
         response = {
             "message": f"Added {added_count} members, skipped {skipped_count} duplicates.",
             "group": group.to_dict(include_members=True)
@@ -132,12 +133,13 @@ def add_group_members(group_id):
 @group_bp.route("/<int:group_id>/members/<int:employee_id>", methods=["DELETE"])
 def remove_group_member(group_id, employee_id):
     try:
+        print(f"Trying to remove member: group_id={group_id}, employee_id={employee_id}")
         member = GroupMember.query.filter_by(group_id=group_id, employee_id=employee_id).first()
         if not member:
             return jsonify({"error": "Employee is not a member of this group"}), 404
         db.session.delete(member)
         db.session.commit()
-        group = Group.query.get(group_id)
+        group = Group.query.options(joinedload(Group.members).joinedload(GroupMember.employee)).get(group_id)
         return jsonify({
             "message": "Member removed successfully",
             "group": group.to_dict(include_members=True)

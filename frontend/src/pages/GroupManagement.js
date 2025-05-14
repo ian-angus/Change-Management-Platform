@@ -280,7 +280,8 @@ function GroupManagement() {
     // --- Rendering ---
     return (
         <div className="group-management-container">
-            <h1>Group Management</h1>
+            <h1 className="settings-heading-blue">Settings: Group Management</h1>
+            <p>Create, view, and manage stakeholder groups for your organization.</p>
             <button onClick={handleOpenAddModal} className="add-button">
                 <FaPlus /> New Group
             </button>
@@ -399,9 +400,13 @@ function GroupManagement() {
                                     {currentGroupMembers.length > 0 ? (
                                         currentGroupMembers.map(member => (
                                             <li key={member.id}>
-                                                <span>{member.name} ({member.email})</span>
+                                                <span>
+                                                    {member.employee
+                                                        ? `${member.employee.name} (${member.employee.email})`
+                                                        : "Unknown"}
+                                                </span>
                                                 <button
-                                                    onClick={() => handleRemoveMember(member.id)}
+                                                    onClick={() => handleRemoveMember(member.employee_id)}
                                                     disabled={isLoading}
                                                     className="remove-member-button"
                                                     title="Remove Member"

@@ -68,22 +68,19 @@ function Sidebar() {
               <ul className="submenu">
                 <li>
                   <NavLink to="/settings/employees" className={({ isActive }) => isActive ? "active" : ""}>
-                    <FaUserCog /> Employee Management {/* Added icon */}
+                    <FaUserCog /> Employee Management
                   </NavLink>
                 </li>
-                {/* Add Groups sub-item */}
                 <li>
                   <NavLink to="/settings/groups" className={({ isActive }) => isActive ? "active" : ""}>
-                     <FaLayerGroup /> Groups {/* Added icon */}
+                    <FaLayerGroup /> Groups
                   </NavLink>
                 </li>
-                {/* Assessment Management sub-item */}
                 <li>
                   <NavLink to="/settings/assessment-templates" className={({ isActive }) => isActive ? "active" : ""}>
                     <FaClipboardList /> Assessment Management
                   </NavLink>
                 </li>
-                {/* Add other settings sub-items here later */}
               </ul>
             )}
           </li>
