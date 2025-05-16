@@ -11,7 +11,7 @@ function AssessmentTemplateBuilder() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    axios.get('/api/assessment_templates')
+    axios.get('/api/assessment-templates')
       .then(res => setTemplates(res.data.templates))
       .catch(err => {
         setError('Failed to load assessment templates.');

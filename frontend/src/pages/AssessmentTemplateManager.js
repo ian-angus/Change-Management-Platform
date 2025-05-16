@@ -1,24 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import './AssessmentTemplateManager.css'; // Create this CSS file
+import './AssessmentTemplateManager.css';
 import { FaEdit, FaCopy, FaTrash, FaPlusCircle, FaEye } from 'react-icons/fa';
-
-const LIKERT_OPTIONS = [
-  "Strongly Disagree",
-  "Disagree",
-  "Neutral",
-  "Agree",
-  "Strongly Agree"
-];
-
-const typeOptions = [
-  { value: "scale", label: "Scale 1-5" },
-  { value: "likert", label: "Likert (Strongly Disagree to Strongly Agree)" },
-  { value: "multi_select", label: "Option (Multi-select)" },
-  { value: "single_select", label: "Option (Single-select)" },
-  { value: "long_text", label: "Long Text" },
-  { value: "short_text", label: "Short Text" }
-];
+import CreateEditTemplateModal from '../components/assessment/CreateEditTemplateModal';
 
 function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestionsUpdated }) {
   const [questions, setQuestions] = useState([]);
@@ -33,12 +17,11 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
     setLoading(true);
     setError(null);
     fetchQuestions();
-    // eslint-disable-next-line
   }, [isOpen]);
 
   const fetchQuestions = async () => {
     try {
-      const res = await axios.get(`${apiBaseUrl}/assessment_templates/${template.id}/questions`);
+      const res = await axios.get(`${apiBaseUrl}/assessment-templates/${template.id}/questions`);
       setQuestions(res.data);
     } catch (err) {
       setError('Failed to load questions.');
@@ -91,13 +74,11 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
     if (err) return setFormError(err);
     setFormError(null);
     try {
-      // Always include all fields, but ensure label and type are present
       const payload = { ...form, label: form.text, type: form.type };
-      console.log('Submitting question payload:', payload);
       if (editingId) {
-        await axios.put(`${apiBaseUrl}/assessment_questions/${editingId}`, payload);
+        await axios.put(`${apiBaseUrl}/assessment-templates/questions/${editingId}`, payload);
       } else {
-        await axios.post(`${apiBaseUrl}/assessment_templates/${template.id}/questions`, payload);
+        await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/questions`, payload);
       }
       resetForm();
       fetchQuestions();
@@ -123,7 +104,7 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this question?')) return;
     try {
-      await axios.delete(`${apiBaseUrl}/assessment_questions/${id}`);
+      await axios.delete(`${apiBaseUrl}/assessment-templates/questions/${id}`);
       fetchQuestions();
       if (onQuestionsUpdated) onQuestionsUpdated();
     } catch (err) {
@@ -324,11 +305,28 @@ function QuestionManagerModal({ template, isOpen, onClose, apiBaseUrl, onQuestio
   ) : null;
 }
 
+const LIKERT_OPTIONS = [
+  "Strongly Disagree",
+  "Disagree",
+  "Neutral",
+  "Agree",
+  "Strongly Agree"
+];
+
+const typeOptions = [
+  { value: "scale", label: "Scale 1-5" },
+  { value: "likert", label: "Likert (Strongly Disagree to Strongly Agree)" },
+  { value: "multi_select", label: "Option (Multi-select)" },
+  { value: "single_select", label: "Option (Single-select)" },
+  { value: "long_text", label: "Long Text" },
+  { value: "short_text", label: "Short Text" }
+];
+
 function AssessmentTemplateManager({ apiBaseUrl }) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editingTemplate, setEditingTemplate] = useState(null); // For create/edit form
+  const [editingTemplate, setEditingTemplate] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [previewTemplate, setPreviewTemplate] = useState(null);
@@ -336,12 +334,11 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [questionModalTemplate, setQuestionModalTemplate] = useState(null);
 
-  // Fetch templates
   const fetchTemplates = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${apiBaseUrl}/assessment_templates`);
+      const response = await axios.get(`${apiBaseUrl}/assessment-templates`);
       setTemplates(Array.isArray(response.data.templates) ? response.data.templates : []);
     } catch (err) {
       console.error("Failed to fetch assessment templates:", err);
@@ -356,7 +353,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
   }, [fetchTemplates]);
 
   const handleCreateNew = () => {
-    setEditingTemplate({ name: '', description: '', questions: [{ text: '', type: 'scale', options: [] }] });
+    setEditingTemplate({ name: '', description: '' });
     setIsCreating(true);
   };
 
@@ -367,7 +364,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
 
   const handleDuplicate = async (template) => {
     try {
-      await axios.post(`${apiBaseUrl}/assessment_templates/${template.id}/duplicate`);
+      await axios.post(`${apiBaseUrl}/assessment-templates/${template.id}/duplicate`);
       setSuccessMessage('Template duplicated successfully');
       fetchTemplates();
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -382,7 +379,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
       return;
     }
     try {
-      await axios.delete(`${apiBaseUrl}/assessment_templates/${templateId}`);
+      await axios.delete(`${apiBaseUrl}/assessment-templates/${templateId}`);
       setSuccessMessage('Template deleted successfully');
       fetchTemplates();
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -394,13 +391,12 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
 
   const handleSaveTemplate = async (templateData) => {
     try {
-      // Map 'name' to 'title' for backend compatibility
       const payload = { ...templateData, title: templateData.name };
       if (isCreating) {
-        await axios.post(`${apiBaseUrl}/assessment_templates`, payload);
+        await axios.post(`${apiBaseUrl}/assessment-templates`, payload);
         setSuccessMessage('Template created successfully');
       } else {
-        await axios.put(`${apiBaseUrl}/assessment_templates/${editingTemplate.id}`, payload);
+        await axios.put(`${apiBaseUrl}/assessment-templates/${editingTemplate.id}`, payload);
         setSuccessMessage('Template updated successfully');
       }
       setEditingTemplate(null);
@@ -413,28 +409,11 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingTemplate(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleQuestionChange = (index, value) => {
-    const updatedQuestions = [...editingTemplate.questions];
-    updatedQuestions[index] = { ...updatedQuestions[index], text: value };
-    setEditingTemplate(prev => ({ ...prev, questions: updatedQuestions }));
-  };
-
-  const removeQuestion = (index) => {
-    if (editingTemplate.questions.length <= 1) return; // Keep at least one question
-    const updatedQuestions = editingTemplate.questions.filter((_, i) => i !== index);
-    setEditingTemplate(prev => ({ ...prev, questions: updatedQuestions }));
-  };
-
   const handlePreview = async (template) => {
     setPreviewTemplate(template);
     setLoadingPreview(true);
     try {
-      const response = await axios.get(`${apiBaseUrl}/assessment_templates/${template.id}/questions`);
+      const response = await axios.get(`${apiBaseUrl}/assessment-templates/${template.id}/questions`);
       setPreviewQuestions(response.data);
     } catch (err) {
       setPreviewQuestions([]);
@@ -448,62 +427,6 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
     setPreviewQuestions([]);
   };
 
-  // Render Logic
-  if (loading) return <div className="loading-state"><p>Loading templates...</p></div>;
-
-  // Form View
-  if (editingTemplate) {
-    return (
-      <div className="template-form">
-        <h3>{isCreating ? 'Create New Template' : 'Edit Template'}</h3>
-        {error && <div className="error-message">{error}</div>}
-        <div className="form-group">
-          <label htmlFor="name">Template Name *</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={editingTemplate.name}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={editingTemplate.description || ''}
-            onChange={handleInputChange}
-            rows="3"
-          />
-        </div>
-        {(editingTemplate.questions || []).map((q, index) => (
-          <div key={index} className="question-group">
-            <label htmlFor={`question-${index}`}>Question {index + 1} *</label>
-            <input
-              type="text"
-              id={`question-${index}`}
-              value={q.text}
-              onChange={(e) => handleQuestionChange(index, e.target.value)}
-              required
-            />
-            {/* Add question type selector later if needed */}
-            {editingTemplate.questions.length > 1 && (
-                <button onClick={() => removeQuestion(index)} className="remove-question-btn">Remove</button>
-            )}
-          </div>
-        ))}
-
-        <div className="form-actions">
-          <button onClick={() => { setEditingTemplate(null); setIsCreating(false); }} className="cancel-btn">Cancel</button>
-          <button onClick={() => handleSaveTemplate(editingTemplate)} className="save-btn">Save Template</button>
-        </div>
-      </div>
-    );
-  }
-
-  // List View
   return (
     <div className="template-manager">
       {error && <div className="error-message">{error}</div>}
@@ -512,6 +435,7 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
       <div className="template-header">
         <h2>Assessment Templates</h2>
         <button onClick={handleCreateNew} className="create-template-btn">
+          <FaPlusCircle style={{ marginRight: 8 }} />
           Create New Template
         </button>
       </div>
@@ -521,51 +445,31 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
           <p>No assessment templates found. Create one to get started.</p>
         </div>
       ) : (
-        <div className="template-table-wrapper">
-          <table className="template-table">
+        <div style={{ overflowX: 'auto' }}>
+          <table className="template-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ maxWidth: 120 }}>Name</th>
-                <th style={{ maxWidth: 220 }}>Description</th>
-                <th style={{ width: 60, textAlign: 'center' }}>Questions</th>
-                <th style={{ width: 100 }}>Last Updated</th>
-                <th style={{ width: 120 }}>Actions</th>
+                <th style={{ width: '120px', minWidth: '80px', maxWidth: '200px' }}>Name</th>
+                <th style={{ width: '200px', minWidth: '100px', maxWidth: '300px' }}>Description</th>
+                <th style={{ width: '80px', minWidth: '60px', maxWidth: '120px' }}>Questions</th>
+                <th style={{ width: '120px' }}>Last Updated</th>
+                <th style={{ width: '140px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {templates.map(template => (
                 <tr key={template.id}>
-                  <td style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{template.name}</td>
-                  <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{template.description || 'No description'}</td>
-                  <td style={{ textAlign: 'center', width: 60 }}>{template.question_count}</td>
-                  <td style={{ width: 100 }}>{template.last_updated ? new Date(template.last_updated).toLocaleDateString() : 'N/A'}</td>
-                  <td style={{ width: 120 }}>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{template.name}</td>
+                  <td style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{template.description || 'No description'}</td>
+                  <td style={{ textAlign: 'center' }}>{template.question_count}</td>
+                  <td>{template.last_updated ? new Date(template.last_updated).toLocaleDateString() : 'N/A'}</td>
+                  <td>
                     <span className="template-actions-icons" style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'flex-start' }}>
-                      <FaEye
-                        className="icon-action"
-                        title="Preview"
-                        onClick={() => handlePreview(template)}
-                      />
-                      <FaEdit
-                        className="icon-action"
-                        title="Edit"
-                        onClick={() => handleEdit(template)}
-                      />
-                      <FaCopy
-                        className="icon-action"
-                        title="Duplicate"
-                        onClick={() => handleDuplicate(template)}
-                      />
-                      <FaTrash
-                        className="icon-action"
-                        title="Delete"
-                        onClick={() => handleDelete(template.id)}
-                      />
-                      <FaPlusCircle
-                        className="icon-action"
-                        title="Add Question"
-                        onClick={() => setQuestionModalTemplate(template)}
-                      />
+                      <FaEye className="icon-action" title="Preview" onClick={() => handlePreview(template)} />
+                      <FaEdit className="icon-action" title="Edit" onClick={() => handleEdit(template)} />
+                      <FaCopy className="icon-action" title="Duplicate" onClick={() => handleDuplicate(template)} />
+                      <FaTrash className="icon-action" title="Delete" onClick={() => handleDelete(template.id)} />
+                      <FaPlusCircle className="icon-action" title="Add Question" onClick={() => setQuestionModalTemplate(template)} />
                     </span>
                   </td>
                 </tr>
@@ -653,6 +557,19 @@ function AssessmentTemplateManager({ apiBaseUrl }) {
           onClose={() => setQuestionModalTemplate(null)}
           apiBaseUrl={apiBaseUrl}
           onQuestionsUpdated={fetchTemplates}
+        />
+      )}
+
+      {/* Create/Edit Template Modal */}
+      {editingTemplate && (
+        <CreateEditTemplateModal
+          isOpen={true}
+          onClose={() => {
+            setEditingTemplate(null);
+            setIsCreating(false);
+          }}
+          onSave={handleSaveTemplate}
+          template={editingTemplate}
         />
       )}
     </div>

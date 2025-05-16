@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaUsers, FaTimes } from 'react-icons/fa';
 import './Projects.css';
 import apiClient from '../apiClient'; // Import the new apiClient
 
@@ -20,6 +20,16 @@ function Projects() {
     status: 'Draft',
     project_phase: 'Initiating',
   });
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [manageType, setManageType] = useState('employees');
+  const [allEmployees, setAllEmployees] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+  const [projectEmployees, setProjectEmployees] = useState([]);
+  const [projectGroups, setProjectGroups] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Fetch projects
   const fetchProjects = async () => {
@@ -87,6 +97,22 @@ function Projects() {
     setIsModalOpen(true);
   };
 
+  const openManageModal = (project) => {
+    setSelectedProject(project);
+    setShowManageModal(true);
+    setManageType('employees');
+    setSearchTerm('');
+    fetchProjectEmployees(project.id);
+    fetchProjectGroups(project.id);
+    fetchAllEmployees();
+    fetchAllGroups();
+  };
+
+  const closeManageModal = () => {
+    setShowManageModal(false);
+    setSelectedProject(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Adjust URL for apiClient (remove /api prefix)
@@ -129,6 +155,92 @@ function Projects() {
       }
     }
   };
+
+  const fetchProjectEmployees = async (projectId) => {
+    try {
+      const res = await apiClient.get(`/projects/${projectId}/stakeholders`);
+      setProjectEmployees(res.data || []);
+    } catch (e) { setProjectEmployees([]); }
+  };
+  const fetchProjectGroups = async (projectId) => {
+    try {
+      const res = await apiClient.get(`/projects/${projectId}/groups`);
+      setProjectGroups(res.data || []);
+    } catch (e) { setProjectGroups([]); }
+  };
+  const fetchAllEmployees = async () => {
+    try {
+      const res = await apiClient.get('/employees');
+      setAllEmployees(res.data.employees || []);
+    } catch (e) { setAllEmployees([]); }
+  };
+  const fetchAllGroups = async () => {
+    try {
+      const res = await apiClient.get('/groups');
+      setAllGroups(res.data || []);
+    } catch (e) { setAllGroups([]); }
+  };
+
+  const handleAddEmployee = async (employeeId) => {
+    setModalLoading(true);
+    setModalError('');
+    try {
+      await apiClient.post(`/projects/${selectedProject.id}/stakeholders`, { employee_id: employeeId });
+      fetchProjectEmployees(selectedProject.id);
+    } catch (e) {
+      setModalError('Failed to add employee.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+  const handleRemoveEmployee = async (employeeId) => {
+    if (!window.confirm('Remove this employee from the project?')) return;
+    setModalLoading(true);
+    setModalError('');
+    try {
+      await apiClient.delete(`/projects/${selectedProject.id}/stakeholders/${employeeId}`);
+      fetchProjectEmployees(selectedProject.id);
+    } catch (e) {
+      setModalError('Failed to remove employee.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+  const handleAddGroup = async (groupId) => {
+    setModalLoading(true);
+    setModalError('');
+    try {
+      await apiClient.post(`/projects/${selectedProject.id}/groups`, { group_id: groupId });
+      fetchProjectGroups(selectedProject.id);
+    } catch (e) {
+      setModalError('Failed to add group.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+  const handleRemoveGroup = async (groupId) => {
+    if (!window.confirm('Remove this group from the project?')) return;
+    setModalLoading(true);
+    setModalError('');
+    try {
+      await apiClient.delete(`/projects/${selectedProject.id}/groups/${groupId}`);
+      fetchProjectGroups(selectedProject.id);
+    } catch (e) {
+      setModalError('Failed to remove group.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const filteredEmployees = allEmployees.filter(emp =>
+    !projectEmployees.some(pe => pe.id === emp.id) &&
+    (emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (emp.job_position && emp.job_position.toLowerCase().includes(searchTerm.toLowerCase())))
+  );
+  const filteredGroups = allGroups.filter(grp =>
+    !projectGroups.some(pg => pg.id === grp.id) &&
+    grp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="projects-page">
@@ -175,6 +287,9 @@ function Projects() {
                       </button>
                       <button onClick={() => handleDeleteProject(project.id)} className="action-btn delete-btn" title="Delete Project">
                         <FaTrash />
+                      </button>
+                      <button onClick={() => openManageModal(project)} className="action-btn" title="Manage Employees/Groups">
+                        <FaUsers />
                       </button>
                     </td>
                   </tr>
@@ -232,6 +347,136 @@ function Projects() {
                 <button type="submit" className="btn-primary">{editingProject ? 'Save Changes' : 'Create Project'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showManageModal && selectedProject && (
+        <div className="modal manage-modal">
+          <div className="modal-content">
+            <button className="modal-close" onClick={closeManageModal}><FaTimes /></button>
+            <h2 style={{marginBottom: 8}}>Manage Employees & Groups</h2>
+            <h3 style={{marginBottom: 16, color: '#1a365d'}}>{selectedProject.name}</h3>
+            <div className="toggle-btn-group" style={{marginBottom: 20, display: 'flex', gap: 8}}>
+              <button
+                onClick={() => setManageType('employees')}
+                className={`toggle-btn${manageType === 'employees' ? ' active' : ''}`}
+                style={{
+                  background: manageType === 'employees' ? '#1a365d' : '#eaf1fa',
+                  color: manageType === 'employees' ? '#fff' : '#1a365d',
+                  border: `2px solid #1a365d`,
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  padding: '8px 20px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s, color 0.2s',
+                  boxShadow: manageType === 'employees' ? '0 2px 8px rgba(26,54,93,0.08)' : 'none',
+                }}
+                aria-pressed={manageType === 'employees'}
+              >
+                Employees
+              </button>
+              <button
+                onClick={() => setManageType('groups')}
+                className={`toggle-btn${manageType === 'groups' ? ' active' : ''}`}
+                style={{
+                  background: manageType === 'groups' ? '#1a365d' : '#eaf1fa',
+                  color: manageType === 'groups' ? '#fff' : '#1a365d',
+                  border: `2px solid #1a365d`,
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  padding: '8px 20px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s, color 0.2s',
+                  boxShadow: manageType === 'groups' ? '0 2px 8px rgba(26,54,93,0.08)' : 'none',
+                }}
+                aria-pressed={manageType === 'groups'}
+              >
+                Groups
+              </button>
+            </div>
+            <input
+              type="text"
+              className="search-input"
+              placeholder={`Search ${manageType}...`}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ marginBottom: 16, width: '100%' }}
+            />
+            {modalError && <div className="modal-error">{modalError}</div>}
+            {modalLoading && <div className="modal-loading">Loading...</div>}
+            {manageType === 'employees' ? (
+              <>
+                <div className="modal-section assigned-section" style={{background:'#eaf1fa', borderRadius:8, padding:12, marginBottom:16}}>
+                  <h4 style={{color:'#1a365d', marginBottom:8}}>Assigned Employees</h4>
+                  <ul className="assigned-list">
+                    {projectEmployees.length === 0 ? (
+                      <li className="empty-state">No employees assigned.</li>
+                    ) : (
+                      projectEmployees.map(emp => (
+                        <li key={emp.id} className="assigned-item" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0'}}>
+                          <span className="assigned-name" style={{fontWeight:600, display:'inline-flex', alignItems:'center'}}><FaUsers style={{color:'#1a365d',marginRight:6}}/>{emp.name} <span style={{fontWeight:400, color:'#555'}}>({emp.job_position})</span></span>
+                          <button className="remove-btn" style={{color:'#ff6b00',background:'none',border:'none',cursor:'pointer'}} onClick={() => handleRemoveEmployee(emp.id)} title="Remove"><FaTrash /></button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <hr className="section-divider" style={{border:'none',borderTop:'1px solid #e0e0e0',margin:'16px 0'}}/>
+                <div className="modal-section available-section" style={{background:'#f7f7f7', borderRadius:8, padding:12}}>
+                  <h4 style={{color:'#888', marginBottom:8}}>Available Employees</h4>
+                  <ul className="available-list">
+                    {filteredEmployees.length === 0 ? (
+                      <li className="empty-state">No employees to add.</li>
+                    ) : (
+                      filteredEmployees.map(emp => (
+                        <li key={emp.id} className="available-item" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0'}}>
+                          <span className="available-name" style={{fontWeight:600, display:'inline-flex', alignItems:'center'}}><FaUsers style={{color:'#bbb',marginRight:6}}/>{emp.name} <span style={{color:'#888'}}>({emp.job_position})</span></span>
+                          <button className="add-btn" style={{color:'#1a365d',background:'none',border:'none',cursor:'pointer'}} onClick={() => handleAddEmployee(emp.id)} title="Add"><FaPlus /></button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="modal-section assigned-section" style={{background:'#eaf1fa', borderRadius:8, padding:12, marginBottom:16}}>
+                  <h4 style={{color:'#1a365d', marginBottom:8}}>Assigned Groups</h4>
+                  <ul className="assigned-list">
+                    {projectGroups.length === 0 ? (
+                      <li className="empty-state">No groups assigned.</li>
+                    ) : (
+                      projectGroups.map(grp => (
+                        <li key={grp.id} className="assigned-item" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0'}}>
+                          <span className="assigned-name" style={{fontWeight:600, display:'inline-flex', alignItems:'center'}}><FaUsers style={{color:'#1a365d',marginRight:6}}/>{grp.name}</span>
+                          <button className="remove-btn" style={{color:'#ff6b00',background:'none',border:'none',cursor:'pointer'}} onClick={() => handleRemoveGroup(grp.id)} title="Remove"><FaTrash /></button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <hr className="section-divider" style={{border:'none',borderTop:'1px solid #e0e0e0',margin:'16px 0'}}/>
+                <div className="modal-section available-section" style={{background:'#f7f7f7', borderRadius:8, padding:12}}>
+                  <h4 style={{color:'#888', marginBottom:8}}>Available Groups</h4>
+                  <ul className="available-list">
+                    {filteredGroups.length === 0 ? (
+                      <li className="empty-state">No groups to add.</li>
+                    ) : (
+                      filteredGroups.map(grp => (
+                        <li key={grp.id} className="available-item" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0'}}>
+                          <span className="available-name" style={{fontWeight:600, display:'inline-flex', alignItems:'center'}}><FaUsers style={{color:'#bbb',marginRight:6}}/>{grp.name}</span>
+                          <button className="add-btn" style={{color:'#1a365d',background:'none',border:'none',cursor:'pointer'}} onClick={() => handleAddGroup(grp.id)} title="Add"><FaPlus /></button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              </>
+            )}
+            <div style={{marginTop: 24, textAlign: 'right'}}>
+              <button className="btn-secondary" onClick={closeManageModal}>Close</button>
+            </div>
           </div>
         </div>
       )}

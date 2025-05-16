@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; // Import useState
 import { NavLink, useLocation } from 'react-router-dom'; // Import useLocation
 import './Sidebar.css';
-import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaCog, FaChevronDown, FaChevronRight, FaLayerGroup, FaUserCog } from 'react-icons/fa'; // Added FaCog, Chevrons, FaLayerGroup, FaUserCog
+import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers, FaCog, FaChevronDown, FaChevronRight, FaLayerGroup, FaUserCog, FaRegListAlt } from 'react-icons/fa'; // Added FaCog, Chevrons, FaLayerGroup, FaUserCog, FaRegListAlt
 
 function Sidebar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -43,6 +43,11 @@ function Sidebar() {
           <li>
             <NavLink to="/assessments" className={({ isActive }) => isActive ? "active" : ""}>
               <FaClipboardList /> Assessments
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/my-assessments" className={({ isActive }) => isActive ? "active" : ""}>
+              <FaRegListAlt /> My Assessments
             </NavLink>
           </li>
           <li>

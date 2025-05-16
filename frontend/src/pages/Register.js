@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoClose } from "react-icons/io5";
+import axios from "axios";
 
 const roles = [
   "Change Manager",
@@ -20,14 +21,14 @@ export default function Register() {
     organization: "",
     role: roles[0],
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
@@ -43,12 +44,30 @@ export default function Register() {
       return;
     }
 
-    setSubmitted(true);
-    // Store name and role in localStorage for welcome message
-    localStorage.setItem("brightfoldUser", JSON.stringify({ name: form.name, role: form.role }));
-    // TODO: Connect to backend
-    console.log("Register form submitted:", form);
-    setTimeout(() => navigate("/dashboard"), 1000);
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post('/api/auth/register', {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        organization: form.organization,
+        role: form.role
+      });
+
+      const { access_token, user } = response.data;
+      
+      // Store the token and user info
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('brightfoldUser', JSON.stringify(user));
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to register. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -56,7 +75,7 @@ export default function Register() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 relative">
         {/* Close Button */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
           aria-label="Close registration form"
         >
@@ -174,11 +193,22 @@ export default function Register() {
 
           <button
             type="submit"
-            disabled={submitted}
+            disabled={isLoading}
             className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-50"
           >
-            {submitted ? "Creating Account..." : "Create Account"}
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
+
+          <div className="text-center text-sm text-gray-600">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/signin')}
+              className="text-blue-700 hover:text-blue-800 font-medium"
+            >
+              Sign in
+            </button>
+          </div>
         </form>
       </div>
     </div>

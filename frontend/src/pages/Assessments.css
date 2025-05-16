@@ -24,6 +24,13 @@
     min-width: 250px; /* Give dropdown some width */
 }
 
+/* Add styles for the selected project in the dropdown */
+.project-selection-area select option.selected {
+    background-color: #eaf1fa;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
 .assessments-content {
     /* Styles for the area below project selection */
 }
@@ -210,35 +217,107 @@
   margin-top: 20px;
 }
 
-/* Assessment Template List Styles */
-.template-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 250px; /* Limit height and add scroll */
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+/* New template card grid and card styles */
+.template-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
 }
 
-.template-list li {
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
+.template-card {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.template-card:hover {
+    background-color: #eaf1fa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.template-card.selected {
+    background-color: #eaf1fa;
+    border-color: #1a365d;
+    box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
+}
+
+.template-card .template-icon {
+    font-size: 24px;
+    color: #1a365d;
+    margin-bottom: 10px;
+}
+
+.template-card strong {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.template-card p {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0;
+}
+
+/* Update the Add Assessment button to be green */
+.button-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
-.template-list li:last-child {
-    border-bottom: none;
+.button-success:hover {
+    background-color: #218838;
 }
 
-.template-list li:hover {
-    background-color: #f8f9fa;
+/* Ensure the Actions column buttons are inline */
+.assessments-table td[data-label="Actions"] {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
-.template-list li.selected {
-    background-color: var(--primary-blue-light); /* Use a light version of brand blue */
-    color: var(--primary-blue);
+/* Add styles for the delete button in the Actions column */
+.button-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.button-danger:hover {
+    background-color: #c82333;
+}
+
+.project-assessments-heading {
+    font-size: 2rem;
     font-weight: bold;
+    color: #1a365d;
+    margin-bottom: 0;
+}
+
+.assessments-table-header th {
+    position: sticky;
+    top: 0;
+    background: #2563eb; /* BrightFold blue */
+    color: #fff;
+    font-weight: bold;
+    z-index: 2;
+    border-bottom: 3px solid #1a365d;
+    box-shadow: 0 2px 4px rgba(26,54,93,0.06);
 }
 

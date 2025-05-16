@@ -49,7 +49,7 @@ export default function Homepage() {
           {/* CTAs */}
           <div className="flex gap-2">
             <a href="/register" className="px-4 py-2 rounded-md bg-blue-700 text-white font-semibold shadow hover:bg-blue-800 transition">Try for Free</a>
-            <a href="#signin" className="px-4 py-2 rounded-md border border-blue-700 text-blue-700 font-semibold hover:bg-blue-50 transition">Sign In</a>
+            <a href="/signin" className="px-4 py-2 rounded-md border border-blue-700 text-blue-700 font-semibold hover:bg-blue-50 transition">Sign In</a>
           </div>
         </nav>
       </header>

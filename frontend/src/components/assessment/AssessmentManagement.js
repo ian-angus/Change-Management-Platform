@@ -14,7 +14,7 @@ const AssessmentManagement = () => {
 
   const fetchTemplates = async () => {
     try {
-      const response = await axios.get('/api/assessment_templates');
+      const response = await axios.get('/api/assessment-templates');
       setTemplates(response.data.templates);
     } catch (error) {
       console.error('Error fetching templates:', error);
@@ -34,9 +34,9 @@ const AssessmentManagement = () => {
   const handleSaveTemplate = async (templateData) => {
     try {
       if (currentTemplate) {
-        await axios.put(`/api/assessment_templates/${currentTemplate.id}`, templateData);
+        await axios.put(`/api/assessment-templates/${currentTemplate.id}`, templateData);
       } else {
-        await axios.post('/api/assessment_templates', templateData);
+        await axios.post('/api/assessment-templates', templateData);
       }
       fetchTemplates();
     } catch (error) {

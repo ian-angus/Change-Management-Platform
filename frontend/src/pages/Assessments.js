@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../apiClient'; // Import the new apiClient
-import { FaPlus, FaTimes, FaPaperPlane } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaPaperPlane, FaClipboardList, FaTrash, FaUserTag } from 'react-icons/fa';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -12,6 +12,8 @@ import {
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import './Assessments.css';
+import AssignStakeholdersModal from '../components/assessment/AssignStakeholdersModal';
+import DeployAssessmentModal from '../components/assessment/DeployAssessmentModal';
 
 ChartJS.register(
   RadialLinearScale,
@@ -21,35 +23,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-const DUMMY_ASSESSMENT_TEMPLATES = [
-  { id: 'change_characteristics', name: 'Change Characteristics', description: 'Assess the scope, scale, and impact of the change.' },
-  { id: 'organizational_attributes', name: 'Organizational Attributes', description: "Evaluate the organization's culture, structure, and history with change." },
-  { id: 'pct', name: 'PCT Assessment', description: 'Prosci Project Change Triangle assessment (Leadership, Project Management, Change Management).' },
-  { id: 'adkar', name: 'ADKAR Assessment (Initial)', description: 'Assess individual readiness across Awareness, Desire, Knowledge, Ability, and Reinforcement.' },
-  { id: 'sponsor_assessment', name: 'Sponsor Assessment', description: 'Evaluate the effectiveness and engagement of the primary sponsor.' },
-];
-
-const prepareAdkarChartData = (assessment) => {
-  if (!assessment || assessment.assessment_type !== 'ADKAR Assessment (Initial)' || !assessment.results) {
-    return null;
-  }
-  const labels = Object.keys(assessment.results);
-  const dataPoints = Object.values(assessment.results);
-  return {
-    labels: labels,
-    datasets: [
-      {
-        label: 'ADKAR Score',
-        data: dataPoints,
-        backgroundColor: 'rgba(0, 123, 255, 0.2)',
-        borderColor: 'rgba(0, 123, 255, 1)',
-        borderWidth: 1,
-        pointBackgroundColor: 'rgba(0, 123, 255, 1)',
-      },
-    ],
-  };
-};
 
 const radarChartOptions = {
   scales: {
@@ -78,6 +51,27 @@ const radarChartOptions = {
   maintainAspectRatio: false
 };
 
+const prepareAdkarChartData = (assessment) => {
+  if (!assessment || assessment.assessment_type !== 'ADKAR Assessment (Initial)' || !assessment.results) {
+    return null;
+  }
+  const labels = Object.keys(assessment.results);
+  const dataPoints = Object.values(assessment.results);
+  return {
+    labels: labels,
+    datasets: [
+      {
+        label: 'ADKAR Score',
+        data: dataPoints,
+        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+        borderColor: 'rgba(0, 123, 255, 1)',
+        borderWidth: 1,
+        pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+      },
+    ],
+  };
+};
+
 function Assessments() {
   const [assessments, setAssessments] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -87,9 +81,15 @@ function Assessments() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [assessmentTemplates] = useState(DUMMY_ASSESSMENT_TEMPLATES);
+  const [assessmentTemplates, setAssessmentTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [addAssessmentError, setAddAssessmentError] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignAssessmentId, setAssignAssessmentId] = useState(null);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [deployAssessmentId, setDeployAssessmentId] = useState(null);
+  const [deployAssessmentType, setDeployAssessmentType] = useState('');
 
   useEffect(() => {
     setLoadingProjects(true);
@@ -103,6 +103,19 @@ function Assessments() {
         const errorMsg = error.response?.data?.error || error.message || "An unknown error occurred";
         setError(`Failed to load projects: ${errorMsg}. Cannot select assessments.`);
         setLoadingProjects(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setLoadingTemplates(true);
+    apiClient.get('/assessment-templates')
+      .then(res => {
+        setAssessmentTemplates(res.data.templates || []);
+        setLoadingTemplates(false);
+      })
+      .catch(err => {
+        setAssessmentTemplates([]);
+        setLoadingTemplates(false);
       });
   }, []);
 
@@ -182,22 +195,60 @@ function Assessments() {
   };
 
   const handleDeployAssessment = (assessmentId, assessmentType) => {
-    if (window.confirm(`Are you sure you want to deploy the "${assessmentType}" assessment (ID: ${assessmentId})?`)) {
-        setError(null);
-        setSuccessMessage(null);
-        apiClient.post(`/assessments/${assessmentId}/deploy`, {}) // Use apiClient, remove /api
-          .then(response => {
-            setSuccessMessage(response.data.message || `Assessment ${assessmentId} deployed successfully.`);
-            fetchAssessments(selectedProjectId);
-            setTimeout(() => setSuccessMessage(null), 3000);
-          })
-          .catch(err => {
-            console.error(`Error deploying assessment ${assessmentId}:`, err);
-            const errorMsg = err.response?.data?.error || err.message || 'Failed to deploy assessment.';
-            setError(errorMsg);
-            setTimeout(() => setError(null), 5000);
-          });
+    setDeployAssessmentId(assessmentId);
+    setDeployAssessmentType(assessmentType);
+    setShowDeployModal(true);
+  };
+
+  const handleDeployModalClose = () => {
+    setShowDeployModal(false);
+    setDeployAssessmentId(null);
+    setDeployAssessmentType('');
+  };
+
+  const handleDeployModalSubmit = async (deployAt) => {
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const payload = deployAt ? { deploy_at: deployAt } : {};
+      await apiClient.post(`/assessments/${deployAssessmentId}/deploy`, payload);
+      setSuccessMessage('Assessment deployed successfully.');
+      fetchAssessments(selectedProjectId);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to deploy assessment.';
+      setError(errorMsg);
+      setTimeout(() => setError(null), 5000);
     }
+  };
+
+  const handleDeleteAssessment = (assessmentId, assessmentType) => {
+    if (window.confirm(`Are you sure you want to delete the "${assessmentType}" assessment (ID: ${assessmentId})?`)) {
+      setError(null);
+      setSuccessMessage(null);
+      apiClient.delete(`/assessments/${assessmentId}`)
+        .then(response => {
+          setSuccessMessage(response.data.message || `Assessment ${assessmentId} deleted successfully.`);
+          fetchAssessments(selectedProjectId);
+          setTimeout(() => setSuccessMessage(null), 3000);
+        })
+        .catch(err => {
+          console.error(`Error deleting assessment ${assessmentId}:`, err);
+          const errorMsg = err.response?.data?.error || err.message || 'Failed to delete assessment.';
+          setError(errorMsg);
+          setTimeout(() => setError(null), 5000);
+        });
+    }
+  };
+
+  const openAssignModal = (assessmentId) => {
+    setAssignAssessmentId(assessmentId);
+    setShowAssignModal(true);
+  };
+
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setAssignAssessmentId(null);
   };
 
   const adkarAssessment = assessments.find(a => a.assessment_type === 'ADKAR Assessment (Initial)');
@@ -221,7 +272,7 @@ function Assessments() {
             >
               <option value="" disabled>-- Select a Project --</option>
               {projects.map(project => (
-                <option key={project.id} value={project.id}>
+                <option key={project.id} value={project.id} className={selectedProjectId === project.id.toString() ? 'selected' : ''} style={selectedProjectId === project.id.toString() ? { fontWeight: 'bold', fontSize: '1.2em' } : {}}>
                   {project.name} (ID: {project.id})
                 </option>
               ))}
@@ -237,11 +288,12 @@ function Assessments() {
       {selectedProjectId ? (
         <div className="assessments-content">
           <div className="toolbar">
-             <h2 className="sub-title">Assessments for {selectedProject?.name || 'Selected Project'}</h2>
+             <h2 className="project-assessments-heading">Assessments for {selectedProject?.name || 'Selected Project'}</h2>
              <button 
-                className="button button-primary" 
+                className="button button-success add-assessment-btn" 
                 onClick={openAddModal} 
                 disabled={!selectedProjectId}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
              >
                 <FaPlus /> Add Assessment
              </button> 
@@ -257,7 +309,7 @@ function Assessments() {
               <div className="card assessment-table-container">
                 <table className="assessments-table">
                   <thead>
-                    <tr>
+                    <tr className="assessments-table-header">
                       <th>ID</th>
                       <th>Type</th>
                       <th>Status</th>
@@ -293,6 +345,20 @@ function Assessments() {
                           >
                             <FaPaperPlane />
                           </button>
+                          <button 
+                            className="button button-danger button-icon" 
+                            onClick={() => handleDeleteAssessment(assessment.id, assessment.assessment_type)}
+                            title="Delete Assessment"
+                          >
+                            <FaTrash />
+                          </button>
+                          <button
+                            className="button button-icon"
+                            onClick={() => openAssignModal(assessment.id)}
+                            title="Assign Stakeholders"
+                          >
+                            <FaUserTag />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -327,18 +393,27 @@ function Assessments() {
             <div className="modal-body">
               {addAssessmentError && <div className="alert alert-danger">{addAssessmentError}</div>}
               <p>Select an assessment template to add:</p>
-              <ul className="template-list">
-                {assessmentTemplates.map(template => (
-                  <li 
-                    key={template.id} 
-                    onClick={() => handleTemplateSelect(template.id)}
-                    className={selectedTemplateId === template.id ? 'selected' : ''}
-                  >
-                    <strong>{template.name}</strong>
-                    <p style={{ margin: '5px 0 0', fontSize: '0.9em', color: '#666' }}>{template.description}</p>
-                  </li>
-                ))}
-              </ul>
+              {loadingTemplates ? (
+                <div>Loading templates...</div>
+              ) : (
+                <div className="template-card-grid">
+                  {assessmentTemplates.length === 0 ? (
+                    <div>No templates available.</div>
+                  ) : (
+                    assessmentTemplates.map(template => (
+                      <div 
+                        key={template.id} 
+                        onClick={() => handleTemplateSelect(template.id)}
+                        className={`template-card ${selectedTemplateId === template.id ? 'selected' : ''}`}
+                      >
+                        <FaClipboardList className="template-icon" />
+                        <strong>{template.name}</strong>
+                        <p>{template.description}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button type="button" className="button" onClick={closeAddModal}>Cancel</button>
@@ -353,6 +428,23 @@ function Assessments() {
             </div>
           </div>
         </div>
+      )}
+      {showAssignModal && assignAssessmentId && (
+        <AssignStakeholdersModal
+          isOpen={showAssignModal}
+          onClose={closeAssignModal}
+          assessmentId={assignAssessmentId}
+          projectId={selectedProjectId}
+          onAssignmentChange={() => fetchAssessments(selectedProjectId)}
+        />
+      )}
+      {showDeployModal && (
+        <DeployAssessmentModal
+          isOpen={showDeployModal}
+          onClose={handleDeployModalClose}
+          onDeploy={handleDeployModalSubmit}
+          assessmentType={deployAssessmentType}
+        />
       )}
     </div>
   );
