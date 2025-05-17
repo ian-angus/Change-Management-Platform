@@ -5,14 +5,22 @@ import { FaTachometerAlt, FaProjectDiagram, FaClipboardList, FaBullhorn, FaUsers
 
 function Sidebar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCommunicationOpen, setIsCommunicationOpen] = useState(false);
   const location = useLocation(); // Get current location
 
   // Determine if the current path is under /settings
   const isSettingsActive = location.pathname.startsWith('/settings');
+  // Determine if the current path is under /communication
+  const isCommunicationActive = location.pathname.startsWith('/key-messages') || location.pathname.startsWith('/plans');
 
   // Toggle Settings submenu
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
+  };
+
+  // Toggle Communication submenu
+  const toggleCommunication = () => {
+    setIsCommunicationOpen(!isCommunicationOpen);
   };
 
   // Keep settings open if a settings sub-page is active
@@ -25,6 +33,13 @@ function Sidebar() {
     //   setIsSettingsOpen(false);
     // }
   }, [isSettingsActive]);
+
+  // Keep communication open if a communication sub-page is active
+  React.useEffect(() => {
+    if (isCommunicationActive) {
+      setIsCommunicationOpen(true);
+    }
+  }, [isCommunicationActive]);
 
   return (
     <aside className="app-sidebar">
@@ -50,19 +65,36 @@ function Sidebar() {
               <FaRegListAlt /> My Assessments
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/plans" className={({ isActive }) => isActive ? "active" : ""}>
-              <FaBullhorn /> Plans
-            </NavLink>
+          {/* Communication with Submenu */}
+          <li className={isCommunicationOpen ? 'submenu-open' : ''}>
+            <button type="button" onClick={toggleCommunication} className={isCommunicationActive ? "active" : ""} style={{ background: 'none', border: 'none', padding: 0, margin: 0, width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <FaBullhorn /> Communication
+              <span className="submenu-toggle-icon">
+                {isCommunicationOpen ? <FaChevronDown /> : <FaChevronRight />}
+              </span>
+            </button>
+            {isCommunicationOpen && (
+              <ul className="submenu">
+                <li>
+                  <NavLink to="/key-messages" className={({ isActive }) => isActive ? "active" : ""}>
+                    <FaClipboardList /> Key Messages
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/plans" className={({ isActive }) => isActive ? "active" : ""}>
+                    <FaBullhorn /> Plans
+                  </NavLink>
+                </li>
+              </ul>
+            )}
           </li>
           <li>
             <NavLink to="/stakeholders" className={({ isActive }) => isActive ? "active" : ""}>
               <FaUsers /> Stakeholders
             </NavLink>
           </li>
-          {/* Settings with Submenu */}
+          {/* Settings with Submenu - always last */}
           <li className={isSettingsOpen ? 'submenu-open' : ''}>
-            {/* Make the main Settings item clickable to toggle, but don't navigate */}
             <button type="button" onClick={toggleSettings} className={isSettingsActive ? "active" : ""} style={{ background: 'none', border: 'none', padding: 0, margin: 0, width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               <FaCog /> Settings
               <span className="submenu-toggle-icon">

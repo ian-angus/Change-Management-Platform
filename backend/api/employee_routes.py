@@ -5,7 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 import datetime
 
-employee_bp = Blueprint("employee_bp", __name__)
+employee_bp = Blueprint("employee_bp", __name__, url_prefix="/api/employees")
 
 ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 

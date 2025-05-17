@@ -1,0 +1,84 @@
+.key-message-builder {
+    padding: 20px;
+}
+
+.key-message-builder .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.key-message-builder .filters-card {
+    margin-bottom: 20px;
+}
+
+.key-message-builder .messages-list {
+    display: grid;
+    gap: 20px;
+}
+
+.key-message-builder .message-card {
+    border: 1px solid #ddd;
+    transition: box-shadow 0.3s ease;
+}
+
+.key-message-builder .message-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.key-message-builder .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.key-message-builder .message-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.key-message-builder .message-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.key-message-builder .message-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.key-message-builder .version {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.key-message-builder .supporting-statement {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.key-message-builder .tone-purpose {
+    color: #666;
+    margin-bottom: 0;
+}
+
+/* Badge styles */
+.key-message-builder .badge {
+    padding: 6px 10px;
+    font-weight: 500;
+}
+
+/* Button styles */
+.key-message-builder .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.key-message-builder .btn svg {
+    font-size: 0.9rem;
+} 

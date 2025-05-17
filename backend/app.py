@@ -6,13 +6,18 @@ from datetime import datetime
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from flask_migrate import Migrate
 from azure.identity import DefaultAzureCredential
+from extensions import db
+from flask_migrate import Migrate
+import traceback
+from flask_mail import Mail
+from api import auth_bp, project_bp, assessment_bp, employee_bp, group_bp, key_messages_bp
+from utils.email_sender import mail
+from config import Config
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # This is a test comment to trigger deployment
 # Import db instance from extensions
-from extensions import db
 from models import Project, Assessment, Employee, Group, GroupMember, AssessmentTemplate, AssessmentQuestion
 
 def seed_database():
@@ -79,19 +84,25 @@ def seed_database():
     else:
         print("Group data already exists, skipping seeding.")
 
+    # Check and seed assessment templates
+    print("Seeding assessment templates...")
+    # Import and run the seed files
+    from seed_prosci_risk_assessment import seed_prosci_template
+    from seed_organizational_attributes_template import seed_org_attributes_template
+    
+    seed_prosci_template()
+    seed_org_attributes_template()
+    print("Assessment template seeding complete.")
+
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
+    app.config.from_object(Config)
+    
+    # Force the correct database path regardless of environment variables
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../instance/dev.db'))
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    print("[DEBUG] FORCED database URI:", app.config["SQLALCHEMY_DATABASE_URI"])
 
-    # Configuration
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(24))
-    
-    # Database configuration
-    if os.environ.get("SQLALCHEMY_DATABASE_URI"):
-        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI")
-    else:
-        db_path = os.path.join(app.instance_path, "dev.db")
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-    
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
 
@@ -104,8 +115,11 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     CORS(app) # Enable CORS for all routes
-    migrate = Migrate(app, db)
     jwt = JWTManager(app)
+    mail.init_app(app)
+
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, db)
 
     # Import blueprints AFTER db is initialized
     from api.project_routes import project_bp
@@ -113,23 +127,36 @@ def create_app():
     from api.employee_routes import employee_bp
     from api.group_routes import group_bp
     from api.assessment_template_routes import assessment_template_bp
+    from api.my_assessments import my_assessments_bp
+    from api.auth_routes import auth_bp
+    from api.key_messages import key_messages_bp
 
-    app.register_blueprint(project_bp, url_prefix="/api")
-    app.register_blueprint(assessment_bp, url_prefix="/api/assessments")
+    app.register_blueprint(project_bp)
+    app.register_blueprint(assessment_bp)  # Remove duplicate prefix since it's in the blueprint
     app.register_blueprint(employee_bp, url_prefix="/api")
     app.register_blueprint(group_bp, url_prefix="/api/groups")
-    app.register_blueprint(assessment_template_bp, url_prefix="/api")
-
-    # Create database tables within app context
-    with app.app_context():
-        db.create_all()
+    app.register_blueprint(assessment_template_bp)  # Remove duplicate prefix since it's in the blueprint
+    app.register_blueprint(my_assessments_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(key_messages_bp)
 
     @app.route("/")
     def hello():
         return "BrightFold Backend Running!"
 
+    # Global error handler for debugging
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        print("=== Unhandled Exception ===")
+        print(traceback.format_exc())
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
     return app
+
 app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
+    with app.app_context():
+        db.create_all()
+        seed_database()  # Seed the database with initial data
     app.run(host='0.0.0.0', port=5001, debug=True)

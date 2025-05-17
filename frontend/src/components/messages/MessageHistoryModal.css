@@ -1,0 +1,27 @@
+.message-history-modal .table {
+    margin-bottom: 0;
+}
+
+.message-history-modal .supporting-statement {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-history-modal .table th {
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.message-history-modal .badge {
+    padding: 6px 10px;
+    font-weight: 500;
+}
+
+.message-history-modal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+} 

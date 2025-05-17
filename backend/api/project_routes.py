@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from extensions import db # Import shared db instance
-from models import Project, Employee, Assessment
+from models import Project, Employee, Assessment, Group
 from datetime import datetime
+import traceback
 
 project_bp = Blueprint("project_bp", __name__, url_prefix="/api/projects")
 
@@ -22,18 +23,26 @@ def parse_date(date_string):
 
 @project_bp.route("/", methods=["GET"])
 def get_projects():
-    """Get all projects, potentially filtered by status."""
+    print("get_projects endpoint called")  # Debug print at top
     status_filter = request.args.get("status")
+    print("Before try block")  # Debug print before try
+    # Uncomment the next line to force an error and see if traceback appears
+    # raise Exception("Test error")
     try:
         query = Project.query
         if status_filter and status_filter in ["Draft", "Active", "Completed"]:
             query = query.filter(Project.status == status_filter)
 
         projects = query.order_by(Project.last_modified_date.desc()).all()
+        print(f"Fetched {len(projects)} projects")
+        for p in projects:
+            print(p)
         project_list = [p.to_dict() for p in projects]
+        print("Project list:", project_list)
         return jsonify(project_list)
     except Exception as e:
         print(f"Error fetching projects: {e}")
+        traceback.print_exc()
         return jsonify({"error": "An error occurred while fetching projects."}), 500
 
 @project_bp.route("/<int:project_id>", methods=["GET"])
@@ -212,4 +221,39 @@ def get_employees():
     except Exception as e:
         print(f"Error fetching employees: {e}")
         return jsonify({"error": "An error occurred while fetching employees."}), 500
+
+@project_bp.route("/<int:project_id>/stakeholders", methods=["GET"])
+def get_project_stakeholders(project_id):
+    project = Project.query.get_or_404(project_id)
+    return jsonify([emp.to_dict() for emp in project.stakeholders])
+
+@project_bp.route("/<int:project_id>/groups", methods=["GET"])
+def get_project_groups(project_id):
+    project = Project.query.get_or_404(project_id)
+    return jsonify([group.to_dict() for group in project.groups])
+
+@project_bp.route("/<int:project_id>/groups", methods=["POST"])
+def add_group_to_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    data = request.get_json()
+    if not data or "group_id" not in data:
+        return jsonify({"error": "Group ID is required"}), 400
+    group = Group.query.get(data["group_id"])
+    if not group:
+        return jsonify({"error": "Group not found"}), 404
+    if group in project.groups:
+        return jsonify({"message": "Group is already associated with this project"}), 200
+    project.groups.append(group)
+    db.session.commit()
+    return jsonify({"message": f"Group {group.name} added to project {project.name}"}), 201
+
+@project_bp.route("/<int:project_id>/groups/<int:group_id>", methods=["DELETE"])
+def remove_group_from_project(project_id, group_id):
+    project = Project.query.get_or_404(project_id)
+    group = Group.query.get_or_404(group_id)
+    if group not in project.groups:
+        return jsonify({"error": "Group is not associated with this project"}), 404
+    project.groups.remove(group)
+    db.session.commit()
+    return jsonify({"message": f"Group {group.name} removed from project {project.name}"}), 200
 

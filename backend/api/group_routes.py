@@ -5,7 +5,7 @@ from extensions import db
 from models import Group, Employee, GroupMember
 from sqlalchemy.orm import joinedload
 
-group_bp = Blueprint("group_bp", __name__, url_prefix="/groups")
+group_bp = Blueprint("group_bp", __name__, url_prefix="/api/groups")
 
 # --- Group CRUD ---
 
@@ -76,6 +76,11 @@ def update_group(group_id):
 def delete_group(group_id):
     try:
         group = Group.query.get_or_404(group_id)
+        # Remove group from all projects
+        for project in group.projects[:]:
+            project.groups.remove(group)
+        # Remove all group members
+        GroupMember.query.filter_by(group_id=group.id).delete()
         db.session.delete(group)
         db.session.commit()
         return jsonify({"message": "Group deleted successfully"}), 200

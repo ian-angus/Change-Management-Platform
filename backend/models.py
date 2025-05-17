@@ -8,6 +8,20 @@ project_stakeholders = db.Table("project_stakeholders",
     db.Column("employee_id", db.Integer, db.ForeignKey("employees.id"), primary_key=True)
 )
 
+# Association table for Project-Group (Many-to-Many)
+project_groups = db.Table('project_groups',
+    db.Column('project_id', db.Integer, db.ForeignKey('project.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
+
+# Association table for Assessment <-> Employee (Stakeholder Assignment)
+assessment_stakeholders = db.Table(
+    'assessment_stakeholders',
+    db.Column('assessment_id', db.Integer, db.ForeignKey('assessment.id'), primary_key=True),
+    db.Column('employee_id', db.Integer, db.ForeignKey('employees.id'), primary_key=True),
+    db.Column('role', db.String(100), nullable=True)
+)
+
 class Role(db.Model):
     __tablename__ = 'role'
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +50,9 @@ class Employee(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # One-to-one relationship to UserAuth
+    user_auth = db.relationship('UserAuth', backref='employee', uselist=False)
+
     stakeholder_in_projects = db.relationship("Project", secondary=project_stakeholders,
                                               lazy="subquery",
                                               backref=db.backref("stakeholders", lazy=True))
@@ -60,6 +77,7 @@ class Group(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     members = db.relationship('GroupMember', back_populates='group', lazy='joined')
+    projects = db.relationship('Project', secondary=project_groups, back_populates='groups')
 
     def to_dict(self, include_members=False):
         data = {
@@ -105,6 +123,7 @@ class Project(db.Model):
     last_modified_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     assessments = db.relationship("Assessment", backref="project", lazy=True, cascade="all, delete-orphan")
+    groups = db.relationship('Group', secondary=project_groups, back_populates='projects')
 
     def to_dict(self):
         return {
@@ -132,6 +151,16 @@ class Assessment(db.Model):
     results = db.Column(db.JSON, nullable=True)
     risk_level = db.Column(db.String(50), nullable=True)
     readiness_score = db.Column(db.Integer, nullable=True)
+    deploy_at = db.Column(db.DateTime, nullable=True)  # New field for scheduled deployment
+    description = db.Column(db.Text, nullable=True)  # Copied from template at creation
+
+    # Add stakeholders relationship
+    stakeholders = db.relationship(
+        "Employee",
+        secondary=assessment_stakeholders,
+        backref=db.backref("assessments_assigned", lazy="dynamic"),
+        lazy="dynamic"
+    )
 
     def to_dict(self):
         last_modified = self.completion_date or self.creation_date
@@ -145,7 +174,9 @@ class Assessment(db.Model):
             "last_modified": last_modified.isoformat() if last_modified else None,
             "results": self.results,
             "risk_level": self.risk_level,
-            "readiness_score": self.readiness_score
+            "readiness_score": self.readiness_score,
+            "deploy_at": self.deploy_at.isoformat() if self.deploy_at else None,
+            "description": self.description
         }
 
 class AssessmentTemplate(db.Model):
@@ -201,4 +232,85 @@ class AssessmentQuestion(db.Model):
             'creation_date': self.created_at.isoformat() if self.created_at else None,
             'last_updated': self.updated_at.isoformat() if self.updated_at else None
         }
+
+class UserAuth(db.Model):
+    __tablename__ = 'user_auth'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    # Optionally: is_active, last_login, etc.
+
+class KeyMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    supporting_statement = db.Column(db.Text, nullable=False)
+    tone_purpose = db.Column(db.String(100), nullable=False)
+    stage_tag = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='Draft')  # Draft, Approved, Archived
+    version = db.Column(db.Integer, nullable=False, default=1)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    
+    # Relationships
+    created_by = db.relationship('Employee', backref='key_messages')
+    project = db.relationship('Project', backref='key_messages')
+    history = db.relationship('KeyMessageHistory', backref='key_message', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'supporting_statement': self.supporting_statement,
+            'tone_purpose': self.tone_purpose,
+            'stage_tag': self.stage_tag,
+            'status': self.status,
+            'version': self.version,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'created_by': self.created_by.to_dict() if self.created_by else None,
+            'project_id': self.project_id
+        }
+
+class KeyMessageHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key_message_id = db.Column(db.Integer, db.ForeignKey('key_message.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    supporting_statement = db.Column(db.Text, nullable=False)
+    tone_purpose = db.Column(db.String(100), nullable=False)
+    stage_tag = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), nullable=False)
+    version = db.Column(db.Integer, nullable=False)
+    changed_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    changed_by_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    
+    # Relationships
+    changed_by = db.relationship('Employee', backref='key_message_changes')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'key_message_id': self.key_message_id,
+            'title': self.title,
+            'supporting_statement': self.supporting_statement,
+            'tone_purpose': self.tone_purpose,
+            'stage_tag': self.stage_tag,
+            'status': self.status,
+            'version': self.version,
+            'changed_at': self.changed_at.isoformat(),
+            'changed_by': self.changed_by.to_dict() if self.changed_by else None
+        }
+
+class PasswordResetToken(db.Model):
+    __tablename__ = 'password_reset_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user_auth.id'), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('UserAuth', backref='reset_tokens')
 

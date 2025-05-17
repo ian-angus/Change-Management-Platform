@@ -17,6 +17,8 @@ import Register from './pages/Register';
 import SignIn from './pages/SignIn';
 import Profile from './pages/Profile';
 import MyAssessments from './pages/MyAssessments';
+import KeyMessageBuilder from './pages/KeyMessageBuilder';
+import ResetPassword from './pages/ResetPassword';
 // Import Reports page if it exists
 // import Reports from './pages/Reports';
 import './App.css';
@@ -50,6 +52,8 @@ function AppContent() {
             <Route path="/settings/assessment-templates" element={<SettingsAssessmentTemplates apiBaseUrl="/api" />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-assessments" element={<MyAssessments />} />
+            <Route path="/key-messages" element={<KeyMessageBuilder />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Add route for Reports if implemented */}
             {/* <Route path="/reports" element={<Reports />} /> */}
             {/* Optional: Add a catch-all or redirect for /settings if needed */}

@@ -2,8 +2,6 @@ from app import create_app
 from extensions import db
 from models import AssessmentTemplate, AssessmentQuestion
 
-app = create_app()
-
 TEMPLATE_NAME = "Prosci Risk Assessment"
 TEMPLATE_DESCRIPTION = (
     "Assess change and organizational readiness using the Prosci methodology. "
@@ -41,31 +39,37 @@ QUESTIONS = [
     {"text": "Employee change competency (1 = Employees are highly competent, 5 = Lack knowledge and skills)", "type": "scale", "options": SCALE_OPTIONS}
 ]
 
-with app.app_context():
-    # Check if template already exists
-    template = AssessmentTemplate.query.filter_by(name=TEMPLATE_NAME).first()
-    if template:
-        print(f"Template '{TEMPLATE_NAME}' already exists. Skipping creation.")
-    else:
+def seed_prosci_template():
+    app = create_app()
+    with app.app_context():
+        # Delete existing template if it exists
+        template = AssessmentTemplate.query.filter_by(name=TEMPLATE_NAME).first()
+        if template:
+            print(f"Deleting existing template: {TEMPLATE_NAME}")
+            AssessmentQuestion.query.filter_by(template_id=template.id).delete()
+            db.session.delete(template)
+            db.session.commit()
+
+        # Create new template
         template = AssessmentTemplate(name=TEMPLATE_NAME, description=TEMPLATE_DESCRIPTION)
         db.session.add(template)
         db.session.commit()
         print(f"Created template: {TEMPLATE_NAME}")
 
-    # Add questions
-    for idx, q in enumerate(QUESTIONS):
-        exists = AssessmentQuestion.query.filter_by(template_id=template.id, text=q["text"]).first()
-        if exists:
-            print(f"Question already exists: {q['text']}")
-            continue
-        question = AssessmentQuestion(
-            template_id=template.id,
-            text=q["text"],
-            type=q["type"],
-            options=q.get("options"),
-            order=idx
-        )
-        db.session.add(question)
-        print(f"Added question: {q['text']}")
-    db.session.commit()
-    print("All questions added.") 
+        # Add questions
+        for idx, q in enumerate(QUESTIONS):
+            question = AssessmentQuestion(
+                template_id=template.id,
+                text=q["text"],
+                type=q["type"],
+                options=q.get("options"),
+                order=idx
+            )
+            db.session.add(question)
+            print(f"Added question: {q['text']}")
+        db.session.commit()
+        print("All questions added.")
+        return template
+
+if __name__ == "__main__":
+    seed_prosci_template() 

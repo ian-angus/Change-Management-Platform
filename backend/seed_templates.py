@@ -1,6 +1,8 @@
 # /home/ubuntu/melyn_cm_platform/backend/seed_templates.py
 import sys
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # Ensure the backend directory is in the Python path
 backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,11 +23,16 @@ def create_likert_options(scale, labels):
         raise ValueError(f"Number of labels ({len(labels)}) must match scale ({scale})")
     return {"scale": scale, "labels": labels}
 
+# Remove all is_default fields from template definitions
+def strip_is_default(template):
+    t = dict(template)
+    t.pop('is_default', None)
+    return t
+
 # 1. Prosci PCT Assessment (Updated to use Agreement Scale)
-pct_template = {
+pct_template = strip_is_default({
     "title": "Prosci PCT Assessment",
     "description": "Assesses project health across Leadership/Sponsorship, Project Management, and Change Management.",
-    "is_default": True, # Mark one as default
     "questions": [
         # Leadership/Sponsorship
         {"text": "The change has a primary sponsor.", "type": "agreement_scale", "options": create_agreement_options()},
@@ -52,7 +59,7 @@ pct_template = {
         # Change Management
         {"text": "A structured change management approach is being applied to the project.", "type": "agreement_scale", "options": create_agreement_options()},
         {"text": "An assessment of the change and its impact on the organization has been completed.", "type": "agreement_scale", "options": create_agreement_options()},
-        {"text": "An assessment of the organization’s readiness for change has been completed.", "type": "agreement_scale", "options": create_agreement_options()},
+        {"text": "An assessment of the organization's readiness for change has been completed.", "type": "agreement_scale", "options": create_agreement_options()},
         {"text": "Anticipated areas of resistance have been identified and special tactics have been developed.", "type": "agreement_scale", "options": create_agreement_options()},
         {"text": "A change management strategy including the necessary sponsorship model and change management team model has been created.", "type": "agreement_scale", "options": create_agreement_options()},
         {"text": "Change management team members have been identified and trained.", "type": "agreement_scale", "options": create_agreement_options()},
@@ -61,13 +68,12 @@ pct_template = {
         {"text": "Feedback processes have been established to gather information from employees to determine how effectively the change is being adopted.", "type": "agreement_scale", "options": create_agreement_options()},
         {"text": "Resistance to change is managed effectively and change successes are celebrated, both in private and in public.", "type": "agreement_scale", "options": create_agreement_options()},
     ]
-}
+})
 
 # 2. Prosci Risk Assessment (Using various Likert scales)
-risk_template = {
+risk_template = strip_is_default({
     "title": "Prosci Risk Assessment",
     "description": "Assesses change characteristics and organizational attributes to determine project risk.",
-    "is_default": False,
     "questions": [
         # Change Characteristics
         {"text": "Scope of change (Workgroup to Enterprise)", "type": "likert_scale", "options": create_likert_options(5, ["Workgroup", "Department", "Division", "Enterprise", "Enterprise+"])},
@@ -89,33 +95,31 @@ risk_template = {
         {"text": "Past changes (Successful=Good, Failed=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Successful", "Successful", "Neutral", "Failed", "Very Failed"])},
         {"text": "Shared vision and direction for the organization (Unified=Good, Shifting=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Unified", "Unified", "Neutral", "Shifting", "Very Shifting"])},
         {"text": "Resources and funding availability (Adequate=Good, Limited=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Adequate", "Adequate", "Neutral", "Limited", "Very Limited"])},
-        {"text": "Organization’s culture and responsiveness to change (Open=Good, Closed=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Open", "Open", "Neutral", "Closed", "Very Closed"])},
+        {"text": "Organization's culture and responsiveness to change (Open=Good, Closed=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Open", "Open", "Neutral", "Closed", "Very Closed"])},
         {"text": "Organizational reinforcement (Rewards risk=Good, Rewards consistency=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Rewards Risk Highly", "Rewards Risk", "Neutral", "Rewards Consistency", "Rewards Consistency Highly"])},
         {"text": "Leadership style and power distribution (Distributed=Good, Centralized=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very Distributed", "Distributed", "Neutral", "Centralized", "Very Centralized"])},
         {"text": "Executive/senior management change competency (High=Good, Low=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very High", "High", "Neutral", "Low", "Very Low"])},
         {"text": "Middle management change competency (High=Good, Low=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very High", "High", "Neutral", "Low", "Very Low"])},
         {"text": "Employee change competency (High=Good, Low=Poor)", "type": "likert_scale", "options": create_likert_options(5, ["Very High", "High", "Neutral", "Low", "Very Low"])},
     ]
-}
+})
 
 # 3. Team Member Competency Assessment
-team_competency_template = {
+team_competency_template = strip_is_default({
     "title": "Team Member Competency Assessment",
     "description": "Gauges the general competency and experience level of project team members in change management.",
-    "is_default": False,
     "questions": [
         {"text": "Have you ever attended any formal change management training? If yes, with what company and how long was the training?", "type": "open_ended", "options": None},
         {"text": "Have you ever been assigned to work on a change management team? If yes, what type of project and what was your role?", "type": "open_ended", "options": None},
         {"text": "Have you supported the communications or training aspect of a business project? If yes, what type of work did you do?", "type": "open_ended", "options": None},
         {"text": "Are you knowledgeable about any change management methodologies or approaches? If yes, describe?", "type": "open_ended", "options": None},
     ]
-}
+})
 
 # 4. Organizational Attributes Worksheet (as open-ended questions)
-org_attributes_template = {
+org_attributes_template = strip_is_default({
     "title": "Organizational Attributes Worksheet",
     "description": "Helps analyze organizational culture, history, and readiness for change.",
-    "is_default": False,
     "questions": [
         {"text": "Organization change culture: Would you consider your organization change resistant or change-ready? Why?", "type": "open_ended", "options": None},
         {"text": "Employee value structure: Does the current employee value system allow change to be easily mandated from above, or is the value system resistant to top-down changes? Why?", "type": "open_ended", "options": None},
@@ -130,54 +134,68 @@ org_attributes_template = {
         {"text": "What are the consequences of failed initiatives?", "type": "open_ended", "options": None},
         {"text": "Change competency: Describe the change management competency of executives, middle managers and employees.", "type": "open_ended", "options": None},
     ]
-}
+})
+
+# Add new default template for ADKAR Assessment (Initial)
+adkar_template = strip_is_default({
+    "title": "ADKAR Assessment (Initial)",
+    "description": "Assess individual readiness across Awareness, Desire, Knowledge, Ability, and Reinforcement.",
+    "questions": [
+        {"text": "Awareness: I understand why the change is necessary.", "type": "agreement_scale", "options": create_agreement_options()},
+        {"text": "Desire: I want to participate in and support the change.", "type": "agreement_scale", "options": create_agreement_options()},
+        {"text": "Knowledge: I know how to change.", "type": "agreement_scale", "options": create_agreement_options()},
+        {"text": "Ability: I have the ability to implement the required skills and behaviors.", "type": "agreement_scale", "options": create_agreement_options()},
+        {"text": "Reinforcement: I will receive reinforcement to sustain the change.", "type": "agreement_scale", "options": create_agreement_options()}
+    ]
+})
 
 def seed_data():
     app = create_app()
-    with app.app_context():
-        print("Seeding assessment templates...")
+    
+    # Use the correct database file (top-level instance/dev.db)
+    engine = create_engine('sqlite:///../instance/dev.db')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    print("[DEBUG] Forcing database URI: sqlite:///../instance/dev.db")
 
-        templates_to_seed = [
-            pct_template,
-            risk_template,
-            team_competency_template,
-            org_attributes_template
-        ]
+    print("Seeding assessment templates...")
 
-        # Clear existing default templates and questions to avoid duplicates
-        print("Clearing existing default templates...")
-        existing_defaults = AssessmentTemplate.query.filter_by(is_default=True).all()
-        for template in existing_defaults:
-            # Delete associated questions first due to foreign key constraints
-            AssessmentQuestion.query.filter_by(template_id=template.id).delete()
-            db.session.delete(template)
-        db.session.commit()
-        print(f"Cleared {len(existing_defaults)} existing default templates.")
+    templates_to_seed = [
+        pct_template,
+        risk_template,
+        team_competency_template,
+        org_attributes_template,
+        adkar_template
+    ]
 
-        # Seed new default templates
-        for template_data in templates_to_seed:
-            if template_data["is_default"]:
-                print(f"Seeding template: {template_data['title']}")
-                template = AssessmentTemplate(
-                    title=template_data["title"],
-                    description=template_data["description"],
-                    is_default=template_data["is_default"]
-                )
-                db.session.add(template)
-                db.session.flush() # Get the ID for the template
+    # Clear existing templates and questions to avoid duplicates
+    print("Clearing existing templates...")
+    session.query(AssessmentQuestion).delete()
+    session.query(AssessmentTemplate).delete()
+    session.commit()
+    print("Cleared all existing templates.")
 
-                for index, q_data in enumerate(template_data["questions"]):
-                    question = AssessmentQuestion(
-                        template_id=template.id,
-                        text=q_data["text"],
-                        question_type=q_data["type"],
-                        options=q_data["options"],
-                        order=index
-                    )
-                    db.session.add(question)
-        
-        db.session.commit()
-        print("Default assessment templates seeded successfully.")
+    # Seed new templates
+    for template_data in templates_to_seed:
+        print(f"Seeding template: {template_data['title']}")
+        template = AssessmentTemplate(
+            name=template_data["title"],
+            description=template_data["description"]
+        )
+        session.add(template)
+        session.flush() # Get the ID for the template
+
+        for index, q_data in enumerate(template_data["questions"]):
+            question = AssessmentQuestion(
+                template_id=template.id,
+                text=q_data["text"],
+                type=q_data["type"],
+                options=q_data["options"],
+                order=index
+            )
+            session.add(question)
+    session.commit()
+    print("All assessment templates seeded successfully.")
 
 if __name__ == "__main__":
     seed_data()
